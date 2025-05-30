@@ -1,0 +1,73 @@
+.navbar-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 64px;
+  background: #fff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid #ddd;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+  padding: 0;
+}
+
+
+/* Botón flotante central */
+.center-button {
+  background-color: #ff7b00;
+  color: #fff;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1100;
+  border: 4px solid #fff;
+}
+
+.center-button:hover {
+  background-color: #e96500;
+  color: #fff;
+}
+
+/* Ítems laterales */
+.bottom-link {
+  all: unset;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.bottom-item {
+  font-size: 22px;
+  padding: 8px;
+  color: gray;
+  transition: all 0.2s ease;
+}
+
+.bottom-item.active {
+  color: #ff7b00;
+}
+
+.bottom-item:hover {
+  color: #ffa74d;
+}
+
+/* Logout */
+.logout-button .bottom-item {
+  color: #d9534f;
+}
+.logout-button .bottom-item:hover {
+  color: #c9302c;
+}

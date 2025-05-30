@@ -1,0 +1,100 @@
+.dish-row-card {
+  display: flex;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  padding: 10px;
+  gap: 15px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border: 1px solid #ddd;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.dish-row-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dish-image {
+  height: 100px;
+  width: 100px;
+  object-fit: contain;
+  border-radius: 1rem;
+  border: 1px solid #ccc;
+}
+
+.dish-image-placeholder {
+  height: 100px;
+  width: 100px;
+  background-color: #e5e5e5;
+  border-radius: 1rem;
+}
+
+.dish-content {
+  flex: 1;
+  padding-left: 1rem;
+}
+
+.dish-title {
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0px;
+  color: black;
+}
+
+.dish-description {
+  color: #6b7280;
+  max-height: 50px;
+  overflow:hidden;
+  line-height: 20px;
+  margin: 0px;
+  font-size: 0.75rem;
+}
+
+.dish-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dish-price {
+  font-weight: bold;
+  font-size: 1.125rem;
+  color: #374151;
+}
+
+.counter-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: black;
+}
+
+.counter-controls button {
+  background-color: #007bff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  color: white;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.counter-controls button:disabled {
+  background-color: #b0c4de;
+  cursor: not-allowed;
+}
+
+.counter-controls span {
+  font-weight: bold;
+}
+
+.counter-controls .add-button {
+  background-color: #FF7F00;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 15px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}

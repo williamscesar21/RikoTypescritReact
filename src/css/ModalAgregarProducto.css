@@ -1,0 +1,183 @@
+/* ================================
+   Fondo del Modal
+================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* ================================
+   Contenedor del Modal
+================================== */
+.modal {
+  background-color: #ffffff;
+  width: 70%;
+  max-width: 400px;
+  padding: 24px 20px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  position: relative;
+  animation: slideIn 0.3s ease-out;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ================================
+   Encabezado y Detalles
+================================== */
+.modal h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.modal p {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+/* ================================
+   Error
+================================== */
+.error-message {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+/* ================================
+   Selector de Cantidad con Botones
+================================== */
+.quantity-selector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  color: black;
+}
+
+.qty-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 20%;
+  font-size: 1.25rem;
+  font-weight: bold;
+  border: none;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: black;
+
+  /* Centramos el contenido */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.qty-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.qty-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.qty-value {
+  min-width: 32px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+/* ================================
+   Botones del Modal
+================================== */
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.modal-buttons button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.modal-buttons button:first-child {
+  background-color: #ff7b00;
+  color: white;
+}
+
+.modal-buttons button:first-child:hover {
+  background-color: #c86100;
+}
+
+.modal-buttons button:last-child {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.modal-buttons button:last-child:hover {
+  background-color: #cfcfcf;
+}
+
+.modal-buttons button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ================================
+   Input Legacy Styles (ya no usado si hay botones)
+================================== */
+.modal input[type="number"] {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.modal input[type="number"]:focus {
+  border-color: #007bff;
+}
+
+.modal input:invalid {
+  border-color: red;
+}
+
+.modal input {
+  transition: border 0.2s;
+}
+
+/* ================================
+   Animación del Modal
+================================== */
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

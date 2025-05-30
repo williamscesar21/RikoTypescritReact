@@ -1,0 +1,45 @@
+/* styles.css */
+body {
+   padding-top: 5vdh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Opcional: oculta el scrollbar del body */
+}
+
+::-webkit-scrollbar {
+    display: none; /* Oculta el scrollbar en navegadores WebKit */
+}
+
+* {
+    scrollbar-width: none; /* Oculta el scrollbar en Firefox */
+    user-select: none;
+}
+
+body {
+    -ms-overflow-style: none; /* Oculta el scrollbar en IE y Edge */
+}
+
+body.keyboard-is-open .container-login {
+  padding-bottom: 300px; /* espacio para que no lo tape el teclado */
+}
+
+
+.app-container {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.navbar {
+  width: 250px; /* o el ancho que estés usando */
+  min-width: 250px;
+  background-color: #fff;
+}
+
+.main-content {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+}
