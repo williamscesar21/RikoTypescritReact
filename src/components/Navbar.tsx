@@ -2,10 +2,15 @@ import { useEffect, useState, type JSX } from "react";
 import { Link, useLocation } from "react-router-dom";
 import '../css/Navbar.css';
 import Cookies from 'js-cookie';
+
+// Feather icons
 import {
-  FaHome, FaStore,
-  FaBoxOpen, FaShoppingBag, FaSignOutAlt
-} from 'react-icons/fa';
+  FiHome,
+  FiShoppingBag,
+  FiBox,
+  FiLogOut,
+  FiMapPin
+} from 'react-icons/fi';
 
 interface NavItem {
   name: string;
@@ -18,11 +23,10 @@ const Navbar: React.FC = () => {
   const location = useLocation();
 
   const paths: NavItem[] = [
-    { name: "Inicio", path: "/", icon: <FaHome /> },
-    { name: "Restaurantes", path: "/restaurants", icon: <FaStore /> },
-    { name: "Bolsita", path: "/bolsita", icon: <FaShoppingBag /> },
-    // { name: "Repartidores", path: "/repartidores", icon: <FaMotorcycle /> },
-    { name: "Productos", path: "/productos", icon: <FaBoxOpen /> },
+    { name: "Inicio", path: "/", icon: <FiHome /> },
+    { name: "Restaurantes", path: "/restaurants", icon: <FiMapPin /> },
+    { name: "Bolsita", path: "/bolsita", icon: <FiShoppingBag /> },
+    { name: "Productos", path: "/productos", icon: <FiBox /> },
   ];
 
   useEffect(() => {
@@ -65,7 +69,7 @@ const Navbar: React.FC = () => {
       ))}
 
       <Link to="/bolsita" className="center-button">
-        <FaShoppingBag />
+        <FiShoppingBag />
       </Link>
 
       {paths.slice(2).map((item, index) => (
@@ -78,11 +82,10 @@ const Navbar: React.FC = () => {
 
       <button className="bottom-link logout-button" onClick={handleLogout}>
         <div className="bottom-item">
-          <FaSignOutAlt />
+          <FiLogOut />
         </div>
       </button>
     </div>
-
   );
 };
 
