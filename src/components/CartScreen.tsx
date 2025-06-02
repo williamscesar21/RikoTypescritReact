@@ -67,9 +67,13 @@ const CartScreen: React.FC = () => {
         0
       );
 
-      const distanceKm = getDistanceKm(userCoords, restaurantCoords[restaurantId]);
-      const deliveryFee = 2 + distanceKm * 0.5;
-      const total = subtotal + deliveryFee;
+      const factorCorrecionRuta = 1.30;
+        const deliveryFee =
+          userCoords && restaurantCoords[restaurantId]
+            ? 1.5 + getDistanceKm(userCoords, restaurantCoords[restaurantId]) * factorCorrecionRuta * 0.5
+            : subtotal * 0.1 + 1.5; 
+        ;
+        const total = subtotal + deliveryFee;
 
       const payload = {
         id_cliente: clientId,
