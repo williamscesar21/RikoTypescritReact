@@ -25,15 +25,36 @@ interface Cart {
   items: CartItem[];
 }
 
+function getDistanceKm(coord1: string, coord2: string): number {
+  const [lat1, lon1] = coord1.split(',').map(Number);
+  const [lat2, lon2] = coord2.split(',').map(Number);
+  const R = 6371; // km
+
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) ** 2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
+
 const CartScreen: React.FC = () => {
   const [cart, setCart] = useState<Cart | null>(null);
   const [restaurantNames, setRestaurantNames] = useState<Record<string, string>>({});
+  const [restaurantCoords, setRestaurantCoords] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const clientId = localStorage.getItem('clientId');
+  const userCoords = localStorage.getItem('userLocation');
 
   const handlePlaceOrder = async (restaurantId: string, items: CartItem[]) => {
-    if (!clientId) return;
+    if (!clientId || !userCoords || !restaurantCoords[restaurantId]) return;
 
     try {
       const detalles = items.map((item) => ({
@@ -45,13 +66,15 @@ const CartScreen: React.FC = () => {
         (acc, item) => acc + item.productDetails.precio * item.quantity,
         0
       );
-      const deliveryFee = subtotal * 0.1 + 2;
+
+      const distanceKm = getDistanceKm(userCoords, restaurantCoords[restaurantId]);
+      const deliveryFee = 2 + distanceKm * 0.5;
       const total = subtotal + deliveryFee;
 
       const payload = {
         id_cliente: clientId,
         id_restaurant: restaurantId,
-        direccion_de_entrega: "9.537870, -69.186624", // Reemplaza con ubicación real si aplica
+        direccion_de_entrega: userCoords,
         detalles,
         total,
       };
@@ -119,7 +142,7 @@ const CartScreen: React.FC = () => {
         );
 
         setCart({ ...cartData, items: itemsWithDetails });
-        await fetchRestaurantNames(itemsWithDetails);
+        await fetchRestaurantMeta(itemsWithDetails);
       } catch (error: any) {
         console.error('Error al obtener el carrito:', error.response?.data || error.message);
       } finally {
@@ -127,9 +150,10 @@ const CartScreen: React.FC = () => {
       }
     };
 
-    const fetchRestaurantNames = async (items: CartItem[]) => {
+    const fetchRestaurantMeta = async (items: CartItem[]) => {
       const uniqueIds = [...new Set(items.map((item) => item.id_restaurant))];
       const names: Record<string, string> = {};
+      const coords: Record<string, string> = {};
 
       await Promise.all(
         uniqueIds.map(async (id) => {
@@ -138,13 +162,16 @@ const CartScreen: React.FC = () => {
               `https://rikoapi.onrender.com/api/restaurant/restaurant/${id}`
             );
             names[id] = data.nombre || `Restaurante ${id.slice(-4)}`;
+            coords[id] = data.ubicacion || '';
           } catch {
             names[id] = `Restaurante ${id.slice(-4)}`;
+            coords[id] = '';
           }
         })
       );
 
       setRestaurantNames(names);
+      setRestaurantCoords(coords);
     };
 
     fetchCart();
@@ -236,12 +263,17 @@ const CartScreen: React.FC = () => {
           (acc, item) => acc + item.productDetails.precio * item.quantity,
           0
         );
-        const deliveryFee = subtotal > 0 ? subtotal * 0.1 + 2 : 0;
+        const factorCorrecionRuta = 1.30; // ~50% más que en línea recta
+        const deliveryFee =
+          userCoords && restaurantCoords[restaurantId]
+            ? 1.5 + getDistanceKm(userCoords, restaurantCoords[restaurantId]) * factorCorrecionRuta * 0.5
+            : subtotal * 0.1 + 1.5; // fallback
+        ;
         const total = subtotal + deliveryFee;
 
         return (
           <div key={restaurantId} className="restaurant-cart-section">
-            <h2 className="restaurant-title">
+            <h2 className="restaurant-title-cart">
               {restaurantNames[restaurantId] || `Restaurante ${restaurantId.slice(-4)}`}
             </h2>
 
