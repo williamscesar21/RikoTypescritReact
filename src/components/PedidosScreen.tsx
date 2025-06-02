@@ -32,6 +32,7 @@ interface Pedido {
   id_restaurant: {
     _id: string;
     nombre: string;
+    ubicacion: string;
   };
   id_repartidor?: string;
   estado: string;
@@ -68,6 +69,34 @@ const PedidosScreen: React.FC = () => {
 
   const normalizarClaseEstado = (estado: string): string =>
     estado.toLowerCase().replace(/[áéíóúÁÉÍÓÚ ]/g, (c) => map[c] || '');
+
+  const calcularTiempoEstimado = (direccionCliente: string, direccionRestaurante: string): string => {
+    const userCoords = direccionCliente;
+    const restaurantCoords = direccionRestaurante; 
+
+    const [lat1, lon1] = userCoords.split(',').map(Number);
+    const [lat2, lon2] = restaurantCoords.split(',').map(Number);
+    const R = 6371;
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distanciaKm = R * c;
+
+    const velocidadPromedio = 30; // km/h
+    const tiempoPreparacion = 15; // minutos
+
+    const tiempoHoras = distanciaKm / velocidadPromedio;
+    const tiempoEntrega = Math.ceil(tiempoHoras * 60);
+    const tiempoTotal = tiempoPreparacion + tiempoEntrega;
+    return `${tiempoTotal} min aprox.`;
+  };
 
   const handleCancelarPedido = async (idPedido: string) => {
     try {
@@ -127,7 +156,7 @@ const PedidosScreen: React.FC = () => {
 
   useEffect(() => {
     fetchPedidos();
-    const interval = setInterval(fetchPedidos, 1000); // cada 15 segundos
+    const interval = setInterval(fetchPedidos, 10000); // cada 10 segundos
     return () => clearInterval(interval);
   }, [clientId]);
 
@@ -156,6 +185,7 @@ const PedidosScreen: React.FC = () => {
             <p><strong>Total:</strong> ${pedido.total.toFixed(2)}</p>
             <p><strong>Dirección:</strong> {pedido.direccion_de_entrega}</p>
             <p><strong>Fecha:</strong> {new Date(pedido.createdAt).toLocaleString()}</p>
+            <p><strong>Tiempo estimado de llegada:</strong> {calcularTiempoEstimado(pedido.direccion_de_entrega, pedido.id_restaurant?.ubicacion)}</p>
 
             {pedido.id_repartidor && (
               <p>
@@ -208,23 +238,21 @@ const PedidosScreen: React.FC = () => {
             )}
 
             {pedido.estado === 'En camino a entregar' && (
-            <>
+              <>
                 {!pedido.confirmado_por_cliente ? (
-                <button
+                  <button
                     onClick={() => handleConfirmarEntregaCliente(pedido._id)}
                     className="confirmar-pedido-button"
-                >
+                  >
                     He recibido mi pedido
-                </button>
+                  </button>
                 ) : !pedido.confirmado_por_repartidor ? (
-                <button className="confirmar-pedido-button" disabled>
+                  <button className="confirmar-pedido-button" disabled>
                     Por confirmar repartidor
-                </button>
+                  </button>
                 ) : null}
-            </>
+              </>
             )}
-
-
           </div>
         ))}
     </div>
