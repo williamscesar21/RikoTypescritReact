@@ -27,9 +27,62 @@ interface Cart {
 
 const CartScreen: React.FC = () => {
   const [cart, setCart] = useState<Cart | null>(null);
+  const [restaurantNames, setRestaurantNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const clientId = localStorage.getItem('clientId');
+
+  const handlePlaceOrder = async (restaurantId: string, items: CartItem[]) => {
+    if (!clientId) return;
+
+    try {
+      const detalles = items.map((item) => ({
+        id_producto: item.product,
+        cantidad: item.quantity,
+      }));
+
+      const subtotal = items.reduce(
+        (acc, item) => acc + item.productDetails.precio * item.quantity,
+        0
+      );
+      const deliveryFee = subtotal * 0.1 + 2;
+      const total = subtotal + deliveryFee;
+
+      const payload = {
+        id_cliente: clientId,
+        id_restaurant: restaurantId,
+        direccion_de_entrega: "9.537870, -69.186624", // Reemplaza con ubicación real si aplica
+        detalles,
+        total,
+      };
+
+      await axios.post('https://rikoapi.onrender.com/api/pedido/pedidos', payload);
+
+      await Promise.all(
+        items.map((item) =>
+          axios.post('https://rikoapi.onrender.com/api/cart/cart/remove', {
+            productId: item.product,
+            clientId,
+          })
+        )
+      );
+
+      setCart((prev) =>
+        prev
+          ? {
+              ...prev,
+              items: prev.items.filter((item) => item.id_restaurant !== restaurantId),
+            }
+          : prev
+      );
+
+      alert('Pedido generado con éxito');
+      navigate(`/pedidos`);
+    } catch (error: any) {
+      console.error('Error al generar pedido:', error.response?.data || error.message);
+      alert('Error al generar el pedido');
+    }
+  };
 
   useEffect(() => {
     if (!clientId) {
@@ -66,11 +119,32 @@ const CartScreen: React.FC = () => {
         );
 
         setCart({ ...cartData, items: itemsWithDetails });
+        await fetchRestaurantNames(itemsWithDetails);
       } catch (error: any) {
         console.error('Error al obtener el carrito:', error.response?.data || error.message);
       } finally {
         setLoading(false);
       }
+    };
+
+    const fetchRestaurantNames = async (items: CartItem[]) => {
+      const uniqueIds = [...new Set(items.map((item) => item.id_restaurant))];
+      const names: Record<string, string> = {};
+
+      await Promise.all(
+        uniqueIds.map(async (id) => {
+          try {
+            const { data } = await axios.get(
+              `https://rikoapi.onrender.com/api/restaurant/restaurant/${id}`
+            );
+            names[id] = data.nombre || `Restaurante ${id.slice(-4)}`;
+          } catch {
+            names[id] = `Restaurante ${id.slice(-4)}`;
+          }
+        })
+      );
+
+      setRestaurantNames(names);
     };
 
     fetchCart();
@@ -128,6 +202,15 @@ const CartScreen: React.FC = () => {
     }
   };
 
+  const groupByRestaurant = (items: CartItem[]) => {
+    const grouped: { [id_restaurant: string]: CartItem[] } = {};
+    items.forEach((item) => {
+      if (!grouped[item.id_restaurant]) grouped[item.id_restaurant] = [];
+      grouped[item.id_restaurant].push(item);
+    });
+    return grouped;
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -137,12 +220,7 @@ const CartScreen: React.FC = () => {
     );
   }
 
-  const subtotal = cart?.items.reduce(
-    (acc, item) => acc + item.productDetails.precio * item.quantity,
-    0
-  ) ?? 0;
-  const deliveryFee = subtotal > 0 ? subtotal * 0.1 + 2 : 0;
-  const total = subtotal + deliveryFee;
+  const groupedItems = cart ? groupByRestaurant(cart.items) : {};
 
   return (
     <div className="cart-screen">
@@ -153,69 +231,82 @@ const CartScreen: React.FC = () => {
         <h1 className="cart-title">Bolsita de compra</h1>
       </div>
 
-      <div className="items-list">
-        {cart?.items.length === 0 ? (
-          <div className="empty-cart-inline">
-            <p>No tienes productos en tu bolsita.</p>
-          </div>
-        ) : (
-          cart?.items.map((item, index) => (
-            <div key={item.product + index} className="cart-item">
-              <div className="item-left">
-                <img
-                  src={item.productDetails.images[0] || '/assets/images/default-product.png'}
-                  alt={item.productDetails.nombre}
-                  className="item-image"
-                />
-              </div>
+      {Object.entries(groupedItems).map(([restaurantId, items]) => {
+        const subtotal = items.reduce(
+          (acc, item) => acc + item.productDetails.precio * item.quantity,
+          0
+        );
+        const deliveryFee = subtotal > 0 ? subtotal * 0.1 + 2 : 0;
+        const total = subtotal + deliveryFee;
 
-              <div className="item-center">
-                <div className="item-name">{item.productDetails.nombre}</div>
-                <div className="item-details">
-                  <span className="item-quantity">{item.quantity} x</span>
-                  <span className="item-price">
-                    ${(item.productDetails.precio * item.quantity).toFixed(2)}
-                  </span>
+        return (
+          <div key={restaurantId} className="restaurant-cart-section">
+            <h2 className="restaurant-title">
+              {restaurantNames[restaurantId] || `Restaurante ${restaurantId.slice(-4)}`}
+            </h2>
+
+            <div className="items-list">
+              {items.map((item, index) => (
+                <div key={item.product + index} className="cart-item">
+                  <div className="item-left">
+                    <img
+                      src={item.productDetails.images[0] || '/assets/images/default-product.png'}
+                      alt={item.productDetails.nombre}
+                      className="item-image"
+                    />
+                  </div>
+
+                  <div className="item-center">
+                    <div className="item-name" onClick={() => navigate(`/product/${item.product}`)}>
+                      {item.productDetails.nombre}
+                    </div>
+                    <div className="item-details">
+                      <span className="item-quantity">{item.quantity}</span>
+                      <span className="item-price">
+                        ${(item.productDetails.precio * item.quantity).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="item-right">
+                    <span onClick={() => handleAddToCart(item, -1)} className="circle-button-cart">
+                      <Minus size={16} />
+                    </span>
+                    <span onClick={() => handleAddToCart(item, 1)} className="circle-button-cart">
+                      <Plus size={16} />
+                    </span>
+                    <span onClick={() => handleRemove(item)} className="remove-button-cart">
+                      <Trash2 size={16} />
+                    </span>
+                  </div>
                 </div>
-              </div>
-
-              <div className="item-right">
-                <span onClick={() => handleAddToCart(item, -1)} className="circle-button-cart">
-                  <Minus size={16} />
-                </span>
-                <span onClick={() => handleAddToCart(item, 1)} className="circle-button-cart">
-                  <Plus size={16} />
-                </span>
-                <span onClick={() => handleRemove(item)} className="remove-button-cart">
-                  <Trash2 size={16} />
-                </span>
-              </div>
+              ))}
             </div>
-          ))
-        )}
-      </div>
 
-      <div className="cart-summary">
-        <div className="summary-row">
-          <span>Sub total</span>
-          <span>${subtotal.toFixed(2)}</span>
-        </div>
-        <div className="summary-row">
-          <span>Delivery fee</span>
-          <span>${deliveryFee.toFixed(2)}</span>
-        </div>
-        <div className="summary-row total-row">
-          <span>Total</span>
-          <span>${total.toFixed(2)}</span>
-        </div>
-        <button
-          onClick={() => navigate('/order-preparing')}
-          className="place-order-button"
-          disabled={cart?.items.length === 0}
-        >
-          PLACE ORDER
-        </button>
-      </div>
+            <div className="cart-summary">
+              <div className="summary-row">
+                <span>Sub total</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
+              <div className="summary-row">
+                <span>Delivery fee</span>
+                <span>${deliveryFee.toFixed(2)}</span>
+              </div>
+              <div className="summary-row total-row">
+                <span>Total</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
+              <button
+                onClick={() => handlePlaceOrder(restaurantId, items)}
+                className="place-order-button"
+                disabled={items.length === 0}
+              >
+                PLACE ORDER
+              </button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };

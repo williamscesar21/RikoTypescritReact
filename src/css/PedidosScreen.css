@@ -1,0 +1,187 @@
+.pedidos-screen {
+  padding: 1rem;
+  background: #fff9f5;
+  font-family: 'Poppins', sans-serif;
+  min-height: 100vh;
+  padding-bottom: 5rem;
+}
+
+.titulo-pedidos {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ff8800;
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.pedido-card {
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease-in-out;
+  border: 1px solid #f3f3f3;
+}
+
+.pedido-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+}
+
+.pedido-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.pedido-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.estado {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  display: inline-block;
+}
+
+/* Pendiente */
+.estado-pendiente {
+  background-color: #fff7e0;
+  color: #ca7d00;
+}
+
+/* En preparación */
+.estado-en-preparacion {
+  background-color: #fff0d6;
+  color: #b97c00;
+}
+
+/* En camino a recoger */
+.estado-en-camino-a-recoger {
+  background-color: #e3f2fd;
+  color: #0277bd;
+}
+
+/* En camino a entregar */
+.estado-en-camino-a-entregar {
+  background-color: #ede7f6;
+  color: #5e35b1;
+}
+
+/* Entregado */
+.estado-entregado {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* Cancelado */
+.estado-cancelado {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+/* Rechazado */
+.estado-rechazado {
+  background-color: #fbe9e7;
+  color: #bf360c;
+}
+
+
+.pedido-card p {
+  font-size: 0.95rem;
+  margin: 0.35rem 0;
+  color: #444;
+}
+
+.pedido-productos {
+  margin-top: 1rem;
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pedido-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pedido-img {
+  width: 65px;
+  height: 65px;
+  border-radius: 14px;
+  object-fit: cover;
+  background-color: #f3f3f3;
+  border: 1px solid #eee;
+}
+
+.pedido-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.9rem;
+}
+
+.nombre-producto {
+  font-weight: 600;
+  color: #111;
+}
+
+.cantidad,
+.subtotal {
+  font-weight: 400;
+  color: #666;
+}
+
+.empty-text {
+  text-align: center;
+  margin-top: 3rem;
+  font-size: 1rem;
+  color: #999;
+  font-style: italic;
+}
+.cancelar-pedido-button {
+  margin-top: 1rem;
+  background-color: #ca030a;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.cancelar-pedido-button:hover {
+  background-color: #a50207;
+}
+
+.confirmar-pedido-button {
+  margin-top: 1rem;
+  background-color: #008b10;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.confirmar-pedido-button:hover {
+  background-color: #094a00;
+}

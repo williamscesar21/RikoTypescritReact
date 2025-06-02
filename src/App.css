@@ -32,6 +32,22 @@ body.keyboard-is-open .container-login {
   overflow: hidden;
 }
 
+.back-button {
+  position: absolute;
+  top: 1.5rem;
+  left: 1rem;
+  background-color: #ff7b00;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  z-index: 1000;
+}
+
+
 .navbar {
   width: 250px; /* o el ancho que estés usando */
   min-width: 250px;

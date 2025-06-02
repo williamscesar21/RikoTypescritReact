@@ -26,7 +26,7 @@ const Navbar: React.FC = () => {
     { name: "Inicio", path: "/", icon: <FiHome /> },
     { name: "Restaurantes", path: "/restaurants", icon: <FiMapPin /> },
     { name: "Bolsita", path: "/bolsita", icon: <FiShoppingBag /> },
-    { name: "Productos", path: "/productos", icon: <FiBox /> },
+    { name: "Pedidos", path: "/pedidos", icon: <FiBox /> },
   ];
 
   useEffect(() => {

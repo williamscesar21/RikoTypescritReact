@@ -72,6 +72,7 @@ const LoginScreen: React.FC = () => {
             const position = await Geolocation.getCurrentPosition();
             const coords = `${position.coords.latitude}, ${position.coords.longitude}`;
             setLocation(coords);
+            localStorage.setItem('userLocation', coords); // 🆕 Guarda en localStorage
             console.log('📍 Coordenadas (Capacitor):', coords);
           } else {
             alert('Permiso de ubicación denegado.');
@@ -81,6 +82,7 @@ const LoginScreen: React.FC = () => {
             (position) => {
               const coords = `${position.coords.latitude}, ${position.coords.longitude}`;
               setLocation(coords);
+              localStorage.setItem('userLocation', coords); // 🆕 Guarda en localStorage
               console.log('📍 Coordenadas (Web):', coords);
             },
             (error) => {
@@ -89,6 +91,7 @@ const LoginScreen: React.FC = () => {
             }
           );
         }
+
       } catch (error) {
         alert('Error al obtener ubicación');
         console.error(error);
