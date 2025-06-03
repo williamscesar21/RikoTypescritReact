@@ -19,6 +19,7 @@ interface PedidoDetalle {
 interface Repartidor {
   _id: string;
   nombre: string;
+  apellido: string;
   telefono?: string;
 }
 
@@ -27,6 +28,7 @@ interface Pedido {
   id_cliente: {
     _id: string;
     nombre: string;
+    apellido: string;
     email?: string;
   };
   id_restaurant: {
@@ -192,17 +194,19 @@ const PedidosScreen: React.FC = () => {
                 <strong>Repartidor:</strong>{' '}
                 {(() => {
                   const nombreCompleto = repartidores[pedido.id_repartidor]?.nombre;
+                  const apellidoCompleto = repartidores[pedido.id_repartidor]?.apellido;
                   if (!nombreCompleto) return 'Aún no asignado';
                   const primerNombre = nombreCompleto.split(' ')[0];
-                  const telefono = repartidores[pedido.id_repartidor]?.telefono;
+                  const primerApellido = apellidoCompleto.split(' ')[0];
+                //   const telefono = repartidores[pedido.id_repartidor]?.telefono;
                   return (
                     <>
-                      {primerNombre}{' '}
-                      {telefono ? (
+                      {primerNombre}{' '}{primerApellido}
+                      {/* {telefono ? (
                         <a href={`tel:${telefono}`}>({telefono})</a>
                       ) : (
                         '(Teléfono no disponible)'
-                      )}
+                      )} */}
                     </>
                   );
                 })()}
@@ -253,6 +257,7 @@ const PedidosScreen: React.FC = () => {
                 ) : null}
               </>
             )}
+            <span className='vermasbutton' onClick={()=> window.location.href = `/pedido/${pedido._id}`}>Ver más</span>
           </div>
         ))}
     </div>

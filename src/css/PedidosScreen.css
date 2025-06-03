@@ -150,6 +150,19 @@
   color: #999;
   font-style: italic;
 }
+
+.vermasbutton{
+    background-color: #a9a9a9;
+    color: #fff;
+    border: none;
+    padding: 0 0.5rem;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
 .cancelar-pedido-button {
   margin-top: 1rem;
   background-color: #ca030a;

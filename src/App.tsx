@@ -11,6 +11,7 @@ import RestaurantsSection from './components/RestaurantsSection';
 import PedidosScreen from './components/PedidosScreen';
 import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
+import PedidoDetailsScreen from './components/PedidoDetailsScreen';
 
 const App: React.FC = () => {
   const token = localStorage.getItem('token');
@@ -87,6 +88,7 @@ const App: React.FC = () => {
               <Route path="/bolsita" element={<CartScreen />} />
               <Route path="/restaurants" element={<RestaurantsSection />} />
               <Route path="/pedidos" element={<PedidosScreen />} />
+              <Route path="/pedido/:id" element={<PedidoDetailsScreen />} />
               <Route path="*" element={<Navigate to="/home" />} />
             </Routes>
           </div>
