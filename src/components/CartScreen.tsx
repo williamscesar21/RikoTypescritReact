@@ -53,63 +53,71 @@ const CartScreen: React.FC = () => {
   const clientId = localStorage.getItem('clientId');
   const userCoords = localStorage.getItem('userLocation');
 
-  const handlePlaceOrder = async (restaurantId: string, items: CartItem[]) => {
-    if (!clientId || !userCoords || !restaurantCoords[restaurantId]) return;
+const handlePlaceOrder = async (restaurantId: string, items: CartItem[]) => {
+  if (!clientId || !userCoords || !restaurantCoords[restaurantId]) return;
 
-    try {
-      const detalles = items.map((item) => ({
-        id_producto: item.product,
-        cantidad: item.quantity,
-      }));
+  try {
+    const detalles = items.map((item) => ({
+      id_producto: item.product,
+      cantidad: item.quantity,
+    }));
 
-      const subtotal = items.reduce(
-        (acc, item) => acc + item.productDetails.precio * item.quantity,
-        0
-      );
+    const subtotal = items.reduce(
+      (acc, item) => acc + item.productDetails.precio * item.quantity,
+      0
+    );
 
-      const factorCorrecionRuta = 1.30;
-        const deliveryFee =
-          userCoords && restaurantCoords[restaurantId]
-            ? 1.5 + getDistanceKm(userCoords, restaurantCoords[restaurantId]) * factorCorrecionRuta * 0.5
-            : subtotal * 0.1 + 1.5; 
-        ;
-        const total = subtotal + deliveryFee;
+    const factorCorrecionRuta = 1.30;
+    const deliveryFee =
+      userCoords && restaurantCoords[restaurantId]
+        ? 1.5 + getDistanceKm(userCoords, restaurantCoords[restaurantId]) * factorCorrecionRuta * 0.5
+        : subtotal * 0.1 + 1.5;
+    const total = subtotal + deliveryFee;
 
-      const payload = {
-        id_cliente: clientId,
-        id_restaurant: restaurantId,
-        direccion_de_entrega: userCoords,
-        detalles,
-        total,
-      };
+    const payload = {
+      id_cliente: clientId,
+      id_restaurant: restaurantId,
+      direccion_de_entrega: userCoords,
+      detalles,
+      total,
+    };
 
-      await axios.post('https://rikoapi.onrender.com/api/pedido/pedidos', payload);
+    // Crear el pedido
+    await axios.post('https://rikoapi.onrender.com/api/pedido/pedidos', payload);
 
-      await Promise.all(
-        items.map((item) =>
-          axios.post('https://rikoapi.onrender.com/api/cart/cart/remove', {
+    // Eliminar todos los productos del restaurante en el carrito
+    await Promise.all(
+      items.map(async (item) => {
+        try {
+          await axios.post('https://rikoapi.onrender.com/api/cart/cart/remove', {
             productId: item.product,
             clientId,
-          })
-        )
-      );
+          });
+        } catch (error) {
+          console.error(`Error al eliminar producto ${item.product}:`, error);
+          // Opcional: podrías mostrar un mensaje o manejar el error
+        }
+      })
+    );
 
-      setCart((prev) =>
-        prev
-          ? {
-              ...prev,
-              items: prev.items.filter((item) => item.id_restaurant !== restaurantId),
-            }
-          : prev
-      );
+    // Actualizar el estado local del carrito eliminando todos los productos del restaurante
+    setCart((prev) =>
+      prev
+        ? {
+            ...prev,
+            items: prev.items.filter((item) => item.id_restaurant !== restaurantId),
+          }
+        : prev
+    );
 
-      alert('Pedido generado con éxito');
-      navigate(`/pedidos`);
-    } catch (error: any) {
-      console.error('Error al generar pedido:', error.response?.data || error.message);
-      alert('Error al generar el pedido');
-    }
-  };
+    alert('Pedido generado con éxito');
+    navigate(`/pedidos`);
+  } catch (error: any) {
+    console.error('Error al generar pedido:', error.response?.data || error.message);
+    alert('Error al generar el pedido');
+  }
+};
+
 
   useEffect(() => {
     if (!clientId) {
@@ -262,16 +270,25 @@ const CartScreen: React.FC = () => {
         <h1 className="cart-title">Bolsita de compra</h1>
       </div>
 
+          {cart && cart.items.length === 0 && (
+      <div className="empty-cart-message">
+        <p>Tu carrito está vacío.</p>
+        <button onClick={() => navigate('/restaurants')} className="browse-button">
+          Explorar restaurantes
+        </button>
+      </div>
+    )}
+
       {Object.entries(groupedItems).map(([restaurantId, items]) => {
         const subtotal = items.reduce(
           (acc, item) => acc + item.productDetails.precio * item.quantity,
           0
         );
-        const factorCorrecionRuta = 1.30; // ~50% más que en línea recta
+        const factorCorrecionRuta = 0.8; // ~50% más que en línea recta
         const deliveryFee =
           userCoords && restaurantCoords[restaurantId]
-            ? 1.5 + getDistanceKm(userCoords, restaurantCoords[restaurantId]) * factorCorrecionRuta * 0.5
-            : subtotal * 0.1 + 1.5; // fallback
+            ? 0.8 + getDistanceKm(userCoords, restaurantCoords[restaurantId]) * factorCorrecionRuta * 0.5
+            : subtotal * 0.05 + 1.5; // fallback
         ;
         const total = subtotal + deliveryFee;
 
@@ -337,7 +354,7 @@ const CartScreen: React.FC = () => {
                 className="place-order-button"
                 disabled={items.length === 0}
               >
-                PLACE ORDER
+                PAGAR
               </button>
             </div>
           </div>

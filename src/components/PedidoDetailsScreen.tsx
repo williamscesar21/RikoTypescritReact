@@ -16,13 +16,13 @@ interface PedidoDetalle {
   cantidad: number;
 }
 
-interface Repartidor {
-  _id: string;
-  nombre: string;
-  apellido: string;
-  telefono?: string;
-  ubicacion?: string;
-}
+// interface Repartidor {
+//   _id: string;
+//   nombre: string;
+//   apellido: string;
+//   telefono?: string;
+//   ubicacion?: string;
+// }
 
 interface Pedido {
   _id: string;
@@ -58,7 +58,7 @@ const normalizarClaseEstado = (estado: string): string =>
 const PedidoDetailsScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [pedido, setPedido] = useState<Pedido | null>(null);
-  const [repartidor, setRepartidor] = useState<Repartidor | null>(null);
+  // const [repartidor, setRepartidor] = useState<Repartidor | null>(null);
   const tiempoPreparacion = 15;
   const navigate = useNavigate();
 
@@ -67,10 +67,10 @@ const PedidoDetailsScreen: React.FC = () => {
       try {
         const { data } = await axios.get(`https://rikoapi.onrender.com/api/pedido/pedidos/${id}`);
         setPedido(data);
-        if (data.id_repartidor) {
-          const res = await axios.get(`https://rikoapi.onrender.com/api/repartidor/repartidor/${data.id_repartidor}`);
-          setRepartidor(res.data);
-        }
+        // if (data.id_repartidor) {
+        //   const res = await axios.get(`https://rikoapi.onrender.com/api/repartidor/repartidor/${data.id_repartidor}`);
+        //   setRepartidor(res.data);
+        // }
       } catch (error) {
         console.error('Error al obtener el pedido:', error);
       }
@@ -79,6 +79,8 @@ const PedidoDetailsScreen: React.FC = () => {
   }, [id]);
 
   const handleCancelarPedido = async () => {
+    const confirmado = window.confirm('¿Estás seguro de que deseas cancelar este pedido?');
+    if (!confirmado) return;
     if (!pedido) return;
     try {
       await axios.put(`https://rikoapi.onrender.com/api/pedido/pedidos/${pedido._id}/cancelar`);
@@ -104,10 +106,10 @@ const PedidoDetailsScreen: React.FC = () => {
 
   if (!pedido) return <div className="empty-text">Cargando detalles del pedido...</div>;
 
-  const restaurantUbicacion = pedido.id_restaurant.ubicacion;
-  const direccionCliente = pedido.direccion_de_entrega;
+  // const restaurantUbicacion = pedido.id_restaurant.ubicacion;
+  // const direccionCliente = pedido.direccion_de_entrega;
 
-  const mapUrl = `https://www.google.com/maps/embed/v1/directions?key=AIzaSyD82sqA8El38A6ihIFT73xZr3ek7cbMxLg&origin=${restaurantUbicacion}&destination=${direccionCliente}&mode=driving`;
+  // const mapUrl = `https://www.google.com/maps/embed/v1/directions?key=AIzaSyD82sqA8El38A6ihIFT73xZr3ek7cbMxLg&origin=${restaurantUbicacion}&destination=${direccionCliente}&mode=driving`;
 
   return (
     <div className="pedidos-screen">
@@ -130,7 +132,7 @@ const PedidoDetailsScreen: React.FC = () => {
         <p><strong>Fecha:</strong> {new Date(pedido.createdAt).toLocaleString()}</p>
         <p><strong>Tiempo de preparación:</strong> {tiempoPreparacion} min</p>
 
-        <div className="map-container" style={{ height: '300px', width: '100%', margin: '1rem 0' }}>
+        {/* <div className="map-container" style={{ height: '300px', width: '100%', margin: '1rem 0' }}>
           <iframe
             title="Mapa de ruta"
             width="100%"
@@ -145,7 +147,7 @@ const PedidoDetailsScreen: React.FC = () => {
 
         {repartidor && (
           <p><strong>Repartidor:</strong> {`${repartidor.nombre.split(' ')[0]} ${repartidor.apellido.split(' ')[0]}`}</p>
-        )}
+        )} */}
 
         <div className="pedido-productos">
           {pedido.detalles.map((detalle, index) => (

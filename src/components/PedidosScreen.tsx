@@ -100,16 +100,20 @@ const PedidosScreen: React.FC = () => {
     return `${tiempoTotal} min aprox.`;
   };
 
-  const handleCancelarPedido = async (idPedido: string) => {
-    try {
-      await axios.put(`https://rikoapi.onrender.com/api/pedido/pedidos/${idPedido}/cancelar`);
-      alert('Pedido cancelado con éxito');
-      setPedidos(prev => prev.filter(p => p._id !== idPedido));
-    } catch (error: any) {
-      console.error('Error al cancelar pedido:', error.response?.data || error.message);
-      alert('No se pudo cancelar el pedido');
-    }
-  };
+const handleCancelarPedido = async (idPedido: string) => {
+  const confirmado = window.confirm('¿Estás seguro de que deseas cancelar este pedido?');
+  if (!confirmado) return;
+
+  try {
+    await axios.put(`https://rikoapi.onrender.com/api/pedido/pedidos/${idPedido}/cancelar`);
+    alert('Pedido cancelado con éxito');
+    setPedidos(prev => prev.filter(p => p._id !== idPedido));
+  } catch (error: any) {
+    console.error('Error al cancelar pedido:', error.response?.data || error.message);
+    alert('No se pudo cancelar el pedido');
+  }
+};
+
 
   const handleConfirmarEntregaCliente = async (idPedido: string) => {
     try {
@@ -187,10 +191,10 @@ const PedidosScreen: React.FC = () => {
             <p><strong>Total:</strong> ${pedido.total.toFixed(2)}</p>
             <p><strong>Dirección:</strong> {pedido.direccion_de_entrega}</p>
             <p><strong>Fecha:</strong> {new Date(pedido.createdAt).toLocaleString()}</p>
-            <p><strong>Tiempo estimado de llegada:</strong> {calcularTiempoEstimado(pedido.direccion_de_entrega, pedido.id_restaurant?.ubicacion)}</p>
+            <p><strong>Tiempo de llegada:</strong> {calcularTiempoEstimado(pedido.direccion_de_entrega, pedido.id_restaurant?.ubicacion)}</p>
 
             {pedido.id_repartidor && (
-              <p>
+              <p className='repartidor-info'>
                 <strong>Repartidor:</strong>{' '}
                 {(() => {
                   const nombreCompleto = repartidores[pedido.id_repartidor]?.nombre;
@@ -213,7 +217,7 @@ const PedidosScreen: React.FC = () => {
               </p>
             )}
 
-            <div className="pedido-productos">
+            {/* <div className="pedido-productos">
               {pedido.detalles.map((detalle, index) => (
                 <div key={index} className="pedido-item">
                   <img
@@ -230,7 +234,7 @@ const PedidosScreen: React.FC = () => {
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
 
             {pedido.estado === 'Pendiente' && (
               <button
@@ -257,7 +261,7 @@ const PedidosScreen: React.FC = () => {
                 ) : null}
               </>
             )}
-            <span className='vermasbutton' onClick={()=> window.location.href = `/pedido/${pedido._id}`}>Ver más</span>
+            <button className='vermasbutton' onClick={()=> window.location.href = `/pedido/${pedido._id}`}>Ver detalles</button>
           </div>
         ))}
     </div>

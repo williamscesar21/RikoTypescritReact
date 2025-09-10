@@ -13,6 +13,12 @@
   text-align: center;
   margin-bottom: 1.25rem;
 }
+.repartidor-info {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: #555;
+  display: none;
+}
 
 .pedido-card {
   background-color: #ffffff;
@@ -152,15 +158,17 @@
 }
 
 .vermasbutton{
-    background-color: #a9a9a9;
-    color: #fff;
-    border: none;
-    padding: 0 0.5rem;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+  margin-top: 1rem;
+  background-color: #8d8d8d;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease;
 }
 
 .cancelar-pedido-button {
