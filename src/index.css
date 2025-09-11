@@ -11,19 +11,30 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent; /* Prevent tap highlight on mobile */
 }
 
 * {
-    scrollbar-width: none; /* Oculta el scrollbar en Firefox */
-    user-select: none;
-    font-family: 'Poppins', sans-serif;
+  scrollbar-width: none; /* Oculta el scrollbar en Firefox */
+  user-select: none; /* Prevent text selection */
+  -webkit-user-select: none; /* Prevent text selection on WebKit browsers */
+  -moz-user-select: none; /* Prevent text selection on Firefox */
+  -ms-user-select: none; /* Prevent text selection on IE/Edge */
+  font-family: 'Poppins', sans-serif;
+  -webkit-tap-highlight-color: transparent; /* Prevent tap highlight on all elements */
 }
 
 a {
   font-weight: 500;
   color: #646cff;
   text-decoration: inherit;
+  user-select: none; /* Reinforce non-selectable for links */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-tap-highlight-color: transparent; /* Prevent tap highlight on links */
 }
+
 a:hover {
   color: #535bf2;
 }
@@ -59,13 +70,35 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
   color: black;
+  user-select: none; /* Reinforce non-selectable for buttons */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-tap-highlight-color: transparent; /* Prevent tap highlight on buttons */
+  -webkit-touch-callout: none; /* Prevent long-press context menu on iOS */
+  touch-action: manipulation; /* Ensure proper touch behavior */
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
-button:focus-visible {
-  outline: 0px auto -webkit-focus-ring-color;
+button:focus-visible,
+button:active {
+  outline: none; /* Remove default focus outline */
+  box-shadow: none; /* Remove any focus shadow */
+  -webkit-tap-highlight-color: transparent; /* Ensure no highlight on tap */
+}
+
+input,
+textarea,
+select {
+  user-select: text; /* Allow text selection in inputs for usability */
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  -webkit-tap-highlight-color: transparent; /* Prevent tap highlight on inputs */
 }
 
 @media (prefers-color-scheme: light) {
@@ -78,5 +111,19 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+}
+
+/* New animation styles */
+.animate-slide-in {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+@keyframes slideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

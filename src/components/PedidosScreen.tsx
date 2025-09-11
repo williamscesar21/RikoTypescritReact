@@ -170,16 +170,16 @@ const handleCancelarPedido = async (idPedido: string) => {
   if (pedidos.length === 0) return <div className="empty-text">No tienes pedidos pendientes.</div>;
 
   return (
-    <div className="pedidos-screen">
+    <div className="pedidos-screen ">
       <button onClick={() => navigate(-1)} className="back-button">
         <ArrowLeft size={20} />
       </button>
-      <h2 className="titulo-pedidos">Mis Pedidos</h2>
+      <h2 className="titulo-pedidos animate-slide-in">Mis Pedidos</h2>
 
       {[...pedidos]
         .sort((a, b) => prioridadEstado[a.estado] - prioridadEstado[b.estado])
         .map((pedido) => (
-          <div key={pedido._id} className="pedido-card">
+          <div key={pedido._id} className="pedido-card animate-slide-in">
             <div className="pedido-header">
               <h3>{pedido.id_restaurant?.nombre || 'Restaurante desconocido'}</h3>
               <span className={`estado estado-${normalizarClaseEstado(pedido.estado)}`}>

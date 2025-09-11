@@ -58,11 +58,11 @@ const RestaurantsSection: React.FC = () => {
 
   return (
     <section className="restaurants-section">
-      <div className="header-row">
+      <div className="header-row ">
         <button onClick={() => navigate(-1)} className="back-button">
           <ArrowLeft size={20} />
         </button>
-        <h2 className="section-title">Restaurantes</h2>
+        <h2 className="section-title animate-slide-in">Restaurantes</h2>
       </div>
 
       <input
@@ -70,16 +70,16 @@ const RestaurantsSection: React.FC = () => {
         placeholder="Buscar restaurante..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="restaurant-search-input"
+        className="restaurant-search-input animate-slide-in"
       />
 
-      <div className="restaurant-s-grid">
+      <div className="restaurant-s-grid ">
         {filteredRestaurants.length > 0 ? (
           filteredRestaurants.map((rest) => (
             <div
               key={rest._id}
               onClick={() => navigate(`/restaurant/${rest._id}`)}
-              className="restaurant-s-card"
+              className="restaurant-s-card animate-slide-in"
             >
               <img src={rest.images[0]} alt={rest.nombre} className="restaurant-s-image" />
               <div className="restaurant-s-info">

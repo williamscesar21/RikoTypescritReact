@@ -35,7 +35,7 @@ const HomeScreen: React.FC = () => {
   return (
     <div className="container-home">
       {/* Header */}
-      <div className="header">
+      <div className="header animate-slide-in" style={{ animationDelay: '0.1s' }}>
         <img src="/logoNaranja.png" alt="Logo" className="logoImage" />
         <div className="headerIcons">
           <FaComments className="icon" />
@@ -44,7 +44,7 @@ const HomeScreen: React.FC = () => {
       </div>
 
       {/* Search and Location */}
-      <div className="searchContainer">
+      <div className="searchContainer animate-slide-in" style={{ animationDelay: '0.2s' }}>
         <div className="searchInputBox">
           <input type="text" placeholder="Buscar productos" className="searchInput" />
         </div>
@@ -55,7 +55,7 @@ const HomeScreen: React.FC = () => {
       </div>
 
       {/* Banner Carousel */}
-      <div className="bannerCarousel" ref={carouselRef}>
+      <div className="bannerCarousel animate-slide-in" style={{ animationDelay: '0.3s' }} ref={carouselRef}>
         {banners.map((src, i) => (
           <div className="bannerCard" key={i}>
             <img src={src} alt={`Banner ${i + 1}`} className="bannerImage" />
@@ -64,7 +64,7 @@ const HomeScreen: React.FC = () => {
       </div>
 
       {/* Categories */}
-      <div className="categories">
+      <div className="categories animate-slide-in" style={{ animationDelay: '0.4s' }}>
         {categories.map((cat, index) => (
           <button key={index} className={index === 0 ? 'categoryButton active' : 'categoryButton'}>
             {cat}
@@ -73,13 +73,13 @@ const HomeScreen: React.FC = () => {
       </div>
 
       {/* Productos */}
-      <div className="section-block">
+      <div className="section-block animate-slide-in" style={{ animationDelay: '0.5s' }}>
         <h2 className="section-title-main">Productos populares</h2>
         <ProductList />
       </div>
 
       {/* Restaurantes */}
-      <div className="section-block">
+      <div className="section-block animate-slide-in" style={{ animationDelay: '0.6s' }}>
         <h2 className="section-title-main">Mejores Restaurantes</h2>
         <RestaurantList />
       </div>

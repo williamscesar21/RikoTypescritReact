@@ -12,9 +12,14 @@ const config: CapacitorConfig = {
       backgroundColor: '#000000',
       style: 'DARK',
       overlaysWebView: true
-    }
+    },
+    CapacitorWebView: {
+      android: {
+        tapHighlightColor: "transparent"
+      }
   }
-};
+}
+}
 
 export default config;
 

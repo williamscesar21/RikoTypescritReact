@@ -439,7 +439,7 @@ const CartScreen: React.FC = () => {
                 onClick={confirmPayment}
                 disabled={!pagoMovilData}
               >
-                Ya Pagé
+                Ya Pagué
               </button>
             </div>
           </div>

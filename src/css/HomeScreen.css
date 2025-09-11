@@ -3,7 +3,7 @@
 
 .container-home {
   padding: 20px;
-  background-color: #fff;
+  background-color: #fff9f5;
   font-family: 'Arial', sans-serif;
   min-height: 100dvh;
 }
@@ -189,4 +189,17 @@
   border-radius: 35px;
   object-fit: cover;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+/* New animation styles */
+.animate-slide-in {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+@keyframes slideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
