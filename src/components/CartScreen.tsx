@@ -25,6 +25,13 @@ interface Cart {
   items: CartItem[];
 }
 
+interface PagoMovil {
+  telefono: string;
+  cedula: string;
+  banco: string;
+  nombreBanco: string;
+}
+
 function getDistanceKm(coord1: string, coord2: string): number {
   const [lat1, lon1] = coord1.split(',').map(Number);
   const [lat2, lon2] = coord2.split(',').map(Number);
@@ -49,75 +56,108 @@ const CartScreen: React.FC = () => {
   const [restaurantNames, setRestaurantNames] = useState<Record<string, string>>({});
   const [restaurantCoords, setRestaurantCoords] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [pagoMovilData, setPagoMovilData] = useState<PagoMovil | null>(null);
+  const [currentRestaurantId, setCurrentRestaurantId] = useState<string | null>(null);
+  const [currentItems, setCurrentItems] = useState<CartItem[]>([]);
   const navigate = useNavigate();
   const clientId = localStorage.getItem('clientId');
   const userCoords = localStorage.getItem('userLocation');
 
-const handlePlaceOrder = async (restaurantId: string, items: CartItem[]) => {
-  if (!clientId || !userCoords || !restaurantCoords[restaurantId]) return;
+  const handlePlaceOrder = async (restaurantId: string, items: CartItem[]) => {
+    if (!clientId) return;
 
-  try {
-    const detalles = items.map((item) => ({
-      id_producto: item.product,
-      cantidad: item.quantity,
-    }));
+    try {
+      // Fetch restaurant Pago Móvil data
+      const { data: restaurant } = await axios.get(
+        `https://rikoapi.onrender.com/api/restaurant/restaurant/${restaurantId}`
+      );
+      
+      if (!restaurant.pagoMovil) {
+        alert('El restaurante no tiene datos de Pago Móvil configurados. Por favor, contacte al restaurante.');
+        return;
+      }
 
-    const subtotal = items.reduce(
-      (acc, item) => acc + item.productDetails.precio * item.quantity,
-      0
-    );
+      // Store the Pago Móvil data and show the modal
+      setPagoMovilData(restaurant.pagoMovil);
+      setCurrentRestaurantId(restaurantId);
+      setCurrentItems(items);
+      setShowModal(true);
+    } catch (error: any) {
+      console.error('Error al obtener datos de Pago Móvil:', error.response?.data || error.message);
+      alert('Error al obtener datos de Pago Móvil. Inténtelo de nuevo.');
+    }
+  };
 
-    const factorCorrecionRuta = 1.30;
-    const deliveryFee =
-      userCoords && restaurantCoords[restaurantId]
-        ? 1.5 + getDistanceKm(userCoords, restaurantCoords[restaurantId]) * factorCorrecionRuta * 0.5
-        : subtotal * 0.1 + 1.5;
-    const total = subtotal + deliveryFee;
+  const confirmPayment = async () => {
+    if (!clientId || !userCoords || !currentRestaurantId || !currentItems) return;
 
-    const payload = {
-      id_cliente: clientId,
-      id_restaurant: restaurantId,
-      direccion_de_entrega: userCoords,
-      detalles,
-      total,
-    };
+    try {
+      const detalles = currentItems.map((item) => ({
+        id_producto: item.product,
+        cantidad: item.quantity,
+      }));
 
-    // Crear el pedido
-    await axios.post('https://rikoapi.onrender.com/api/pedido/pedidos', payload);
+      const subtotal = currentItems.reduce(
+        (acc, item) => acc + item.productDetails.precio * item.quantity,
+        0
+      );
 
-    // Eliminar todos los productos del restaurante en el carrito
-    await Promise.all(
-      items.map(async (item) => {
-        try {
-          await axios.post('https://rikoapi.onrender.com/api/cart/cart/remove', {
-            productId: item.product,
-            clientId,
-          });
-        } catch (error) {
-          console.error(`Error al eliminar producto ${item.product}:`, error);
-          // Opcional: podrías mostrar un mensaje o manejar el error
-        }
-      })
-    );
+      const factorCorrecionRuta = 1.30;
+      const deliveryFee =
+        userCoords && restaurantCoords[currentRestaurantId]
+          ? 1.5 + getDistanceKm(userCoords, restaurantCoords[currentRestaurantId]) * factorCorrecionRuta * 0.5
+          : subtotal * 0.1 + 1.5;
+      const total = subtotal + deliveryFee;
 
-    // Actualizar el estado local del carrito eliminando todos los productos del restaurante
-    setCart((prev) =>
-      prev
-        ? {
-            ...prev,
-            items: prev.items.filter((item) => item.id_restaurant !== restaurantId),
+      const payload = {
+        id_cliente: clientId,
+        id_restaurant: currentRestaurantId,
+        direccion_de_entrega: userCoords,
+        detalles,
+        total,
+      };
+
+      // Crear el pedido
+      await axios.post('https://rikoapi.onrender.com/api/pedido/pedidos', payload);
+
+      // Eliminar todos los productos del restaurante en el carrito
+      await Promise.all(
+        currentItems.map(async (item) => {
+          try {
+            await axios.post('https://rikoapi.onrender.com/api/cart/cart/remove', {
+              productId: item.product,
+              clientId,
+            });
+          } catch (error) {
+            console.error(`Error al eliminar producto ${item.product}:`, error);
           }
-        : prev
-    );
+        })
+      );
 
-    alert('Pedido generado con éxito');
-    navigate(`/pedidos`);
-  } catch (error: any) {
-    console.error('Error al generar pedido:', error.response?.data || error.message);
-    alert('Error al generar el pedido');
-  }
-};
+      // Actualizar el estado local del carrito
+      setCart((prev) =>
+        prev
+          ? {
+              ...prev,
+              items: prev.items.filter((item) => item.id_restaurant !== currentRestaurantId),
+            }
+          : prev
+      );
 
+      // Cerrar el modal y mostrar confirmación
+      setShowModal(false);
+      setPagoMovilData(null);
+      setCurrentRestaurantId(null);
+      setCurrentItems([]);
+      alert('Pedido generado con éxito');
+      navigate(`/pedidos`);
+    } catch (error: any) {
+      console.error('Error al generar pedido:', error.response?.data || error.message);
+      alert('Error al generar el pedido');
+      setShowModal(false);
+    }
+  };
 
   useEffect(() => {
     if (!clientId) {
@@ -270,26 +310,25 @@ const handlePlaceOrder = async (restaurantId: string, items: CartItem[]) => {
         <h1 className="cart-title">Bolsita de compra</h1>
       </div>
 
-          {cart && cart.items.length === 0 && (
-      <div className="empty-cart-message">
-        <p>Tu carrito está vacío.</p>
-        <button onClick={() => navigate('/restaurants')} className="browse-button">
-          Explorar restaurantes
-        </button>
-      </div>
-    )}
+      {cart && cart.items.length === 0 && (
+        <div className="empty-cart-message">
+          <p>Tu carrito está vacío.</p>
+          <button onClick={() => navigate('/restaurants')} className="browse-button">
+            Explorar restaurantes
+          </button>
+        </div>
+      )}
 
       {Object.entries(groupedItems).map(([restaurantId, items]) => {
         const subtotal = items.reduce(
           (acc, item) => acc + item.productDetails.precio * item.quantity,
           0
         );
-        const factorCorrecionRuta = 0.8; // ~50% más que en línea recta
+        const factorCorrecionRuta = 0.8;
         const deliveryFee =
           userCoords && restaurantCoords[restaurantId]
             ? 0.8 + getDistanceKm(userCoords, restaurantCoords[restaurantId]) * factorCorrecionRuta * 0.5
-            : subtotal * 0.05 + 1.5; // fallback
-        ;
+            : subtotal * 0.05 + 1.5;
         const total = subtotal + deliveryFee;
 
         return (
@@ -360,6 +399,52 @@ const handlePlaceOrder = async (restaurantId: string, items: CartItem[]) => {
           </div>
         );
       })}
+
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Datos de Pago Móvil</h2>
+            {pagoMovilData ? (
+              <div className="pago-movil-details">
+                <p><strong>Teléfono:</strong> {pagoMovilData.telefono}</p>
+                <p><strong>Documento:</strong> {pagoMovilData.cedula}</p>
+                <p><strong>Banco:</strong> {pagoMovilData.nombreBanco} ({pagoMovilData.banco})</p>
+                <p>
+                  <strong>Total a pagar:</strong> $
+                  {(
+                    currentItems.reduce((acc, item) => acc + item.productDetails.precio * item.quantity, 0) +
+                    (userCoords && currentRestaurantId && restaurantCoords[currentRestaurantId]
+                      ? 0.8 + getDistanceKm(userCoords, restaurantCoords[currentRestaurantId]) * 0.8 * 0.5
+                      : currentItems.reduce((acc, item) => acc + item.productDetails.precio * item.quantity, 0) * 0.05 + 1.5)
+                  ).toFixed(2)}
+                </p>
+              </div>
+            ) : (
+              <p>No se encontraron datos de Pago Móvil.</p>
+            )}
+            <div className="modal-buttons">
+              <button
+                className="modal-cancel-button"
+                onClick={() => {
+                  setShowModal(false);
+                  setPagoMovilData(null);
+                  setCurrentRestaurantId(null);
+                  setCurrentItems([]);
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                className="modal-confirm-button"
+                onClick={confirmPayment}
+                disabled={!pagoMovilData}
+              >
+                Ya Pagé
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
