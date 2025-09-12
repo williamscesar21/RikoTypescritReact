@@ -64,7 +64,7 @@ const ProductList: React.FC = () => {
 
   return (
     <>
-      <div className="product-list">
+      <div className="product-list animate-slide-in">
         {paginatedProducts.map((item) => (
           <div
             key={item._id}

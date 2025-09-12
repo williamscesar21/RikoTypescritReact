@@ -4,10 +4,10 @@ import '../css/HomeScreen.css';
 import RestaurantList from './RestaurantList';
 import ProductList from './ProductList';
 
-const categories = [
-  'Todo', 'Fast Food', 'Cenas', 'Postres', 'Bebidas', 'Comida Rápida',
-  'Comida Italiana', 'Comida Mexicana', 'Comida Argentina', 'Comida Peruana'
-];
+// const categories = [
+//   'Todo', 'Fast Food', 'Cenas', 'Postres', 'Bebidas', 'Comida Rápida',
+//   'Comida Italiana', 'Comida Mexicana', 'Comida Argentina', 'Comida Peruana'
+// ];
 
 const banners = [
   'https://firebasestorage.googleapis.com/v0/b/rikoweb-ff259.appspot.com/o/delicious-indian-meal-with-biryani-rice-photo.jpeg?alt=media&token=d34e2bc2-99c0-440a-b00b-c2dc929d3a73',
@@ -64,22 +64,22 @@ const HomeScreen: React.FC = () => {
       </div>
 
       {/* Categories */}
-      <div className="categories animate-slide-in" style={{ animationDelay: '0.4s' }}>
+      {/* <div className="categories animate-slide-in" style={{ animationDelay: '0.4s' }}>
         {categories.map((cat, index) => (
           <button key={index} className={index === 0 ? 'categoryButton active' : 'categoryButton'}>
             {cat}
           </button>
         ))}
-      </div>
+      </div> */}
 
       {/* Productos */}
-      <div className="section-block animate-slide-in" style={{ animationDelay: '0.5s' }}>
+      <div style={{ animationDelay: '0.5s' }}>
         <h2 className="section-title-main">Productos populares</h2>
         <ProductList />
       </div>
 
       {/* Restaurantes */}
-      <div className="section-block animate-slide-in" style={{ animationDelay: '0.6s' }}>
+      <div style={{ animationDelay: '0.6s' }}>
         <h2 className="section-title-main">Mejores Restaurantes</h2>
         <RestaurantList />
       </div>

@@ -48,7 +48,7 @@ const RestaurantList: React.FC = () => {
   if (loading) return <div className="loading">Cargando Restaurantes...</div>;
 
   return (
-    <div className="restaurant-list">
+    <div className="restaurant-list animate-slide-in">
       {restaurants.map((item) => (
         <div
           key={item._id}

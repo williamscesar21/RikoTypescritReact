@@ -64,6 +64,12 @@
   color: #ca7d00;
 }
 
+/* Pendiente */
+.estado-confirmando-pago {
+  background-color: #fff7e0;
+  color: #ca1e00;
+}
+
 /* En preparación */
 .estado-en-preparacion {
   background-color: #fff0d6;
