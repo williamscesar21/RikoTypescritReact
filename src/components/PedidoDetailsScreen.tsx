@@ -166,7 +166,7 @@ const PedidoDetailsScreen: React.FC = () => {
           ))}
         </div>
 
-        {pedido.estado === 'Pendiente' && (
+        {pedido.estado === 'Pendiente' || pedido.estado === 'Confirmando pago' && (
           <button className="cancelar-pedido-button" onClick={handleCancelarPedido}>
             Cancelar Pedido
           </button>

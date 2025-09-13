@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import '../css/PedidosScreen.css';
 import { ArrowLeft } from 'react-feather';
-
+import '../css/PedidosScreen.css';
 interface ProductDetails {
   _id: string;
   nombre: string;
@@ -236,7 +235,7 @@ const handleCancelarPedido = async (idPedido: string) => {
               ))}
             </div> */}
 
-            {pedido.estado === 'Pendiente' && (
+            {pedido.estado === 'Pendiente' || pedido.estado === 'Confirmando pago' && (
               <button
                 onClick={() => handleCancelarPedido(pedido._id)}
                 className="cancelar-pedido-button"

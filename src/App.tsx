@@ -12,6 +12,7 @@ import PedidosScreen from './components/PedidosScreen';
 import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
 import PedidoDetailsScreen from './components/PedidoDetailsScreen';
+import ClientScreen from './components/ClientScreen';
 
 const App: React.FC = () => {
   const token = localStorage.getItem('token');
@@ -84,6 +85,7 @@ const App: React.FC = () => {
               <Route path="/" element={<Navigate to="/home" />} />
               <Route path="/home" element={<HomeScreen />} />
               <Route path="/restaurant/:id" element={<RestaurantScreen />} />
+              <Route path="/client/:id" element={<ClientScreen />} />
               <Route path="/product/:id" element={<ProductScreen />} />
               <Route path="/bolsita" element={<CartScreen />} />
               <Route path="/restaurants" element={<RestaurantsSection />} />

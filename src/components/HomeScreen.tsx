@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { FaMapMarkerAlt, FaComments, FaBell } from 'react-icons/fa';
+// import { FaMapMarkerAlt} from 'react-icons/fa';
 import '../css/HomeScreen.css';
 import RestaurantList from './RestaurantList';
 import ProductList from './ProductList';
@@ -17,6 +17,7 @@ const banners = [
 
 const HomeScreen: React.FC = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
+  const clientID = localStorage.getItem('clientId');
 
   useEffect(() => {
     let currentIndex = 0;
@@ -37,9 +38,10 @@ const HomeScreen: React.FC = () => {
       {/* Header */}
       <div className="header animate-slide-in" style={{ animationDelay: '0.1s' }}>
         <img src="/logoNaranja.png" alt="Logo" className="logoImage" />
-        <div className="headerIcons">
-          <FaComments className="icon" />
-          <FaBell className="icon" />
+        <div onClick={() => window.location.href = `/client/${clientID}`} className="headerIcons" style={{ backgroundColor: '#FF7F00', padding: '0rem 0.8rem', borderRadius: '20px' }}>
+          {/* <FaComments className="icon" />
+          <FaBell className="icon" /> */}
+          Mi cuenta
         </div>
       </div>
 
@@ -49,8 +51,8 @@ const HomeScreen: React.FC = () => {
           <input type="text" placeholder="Buscar productos" className="searchInput" />
         </div>
         <div className="location">
-          <FaMapMarkerAlt />
-          <span>Acarigua</span>
+          {/* <FaMapMarkerAlt />
+          <span>Acarigua</span> */}
         </div>
       </div>
 

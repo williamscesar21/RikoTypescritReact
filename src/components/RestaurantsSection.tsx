@@ -62,7 +62,7 @@ const RestaurantsSection: React.FC = () => {
         <button onClick={() => navigate(-1)} className="back-button">
           <ArrowLeft size={20} />
         </button>
-        <h2 className="section-title animate-slide-in">Restaurantes</h2>
+        <h2 className="titulo-pedidos animate-slide-in">Restaurantes</h2>
       </div>
 
       <input

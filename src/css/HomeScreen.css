@@ -1,5 +1,6 @@
 .container-home {
   padding: 20px;
+  padding-top: 50px;
   background-color: #fff9f5;
   font-family: 'Arial', sans-serif;
   min-height: 100dvh;
@@ -38,7 +39,6 @@
   padding: 8px 12px;
   border-radius: 10px;
   flex: 1;
-  max-width: 60vw;
 }
 
 .searchIcon {
