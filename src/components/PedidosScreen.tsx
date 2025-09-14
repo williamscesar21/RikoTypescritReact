@@ -165,8 +165,16 @@ const handleCancelarPedido = async (idPedido: string) => {
     return () => clearInterval(interval);
   }, [clientId]);
 
+  if (!clientId) {
+    return (
+      <div className="loading-container">
+        <img src="/logoNaranja.png" alt="loading" className="loading-image" />
+        <p className="loading-text">Cargando...</p>
+      </div>
+    );
+  }
   if (loading) return <div className="loading-text">Cargando pedidos...</div>;
-  if (pedidos.length === 0) return <div className="empty-text">No tienes pedidos pendientes.</div>;
+  if (pedidos.length === 0) return <div className="empty-text">No tienes ningun pedido</div>;
 
   return (
     <div className="pedidos-screen ">

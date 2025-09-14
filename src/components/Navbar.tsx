@@ -2,14 +2,13 @@ import { useEffect, useState, type JSX } from "react";
 import { Link, useLocation } from "react-router-dom";
 import '../css/Navbar.css';
 import Cookies from 'js-cookie';
-
+import { IoStorefrontOutline } from "react-icons/io5";
+import { LuNotebookPen } from "react-icons/lu";
 // Feather icons
 import {
   FiHome,
   FiShoppingBag,
-  FiBox,
-  FiLogOut,
-  FiMapPin
+  FiLogOut
 } from 'react-icons/fi';
 
 interface NavItem {
@@ -24,9 +23,9 @@ const Navbar: React.FC = () => {
 
   const paths: NavItem[] = [
     { name: "Inicio", path: "/", icon: <FiHome /> },
-    { name: "Restaurantes", path: "/restaurants", icon: <FiMapPin /> },
+    { name: "Restaurantes", path: "/restaurants", icon: <IoStorefrontOutline /> },
     { name: "Bolsita", path: "/bolsita", icon: <FiShoppingBag /> },
-    { name: "Pedidos", path: "/pedidos", icon: <FiBox /> },
+    { name: "Pedidos", path: "/pedidos", icon: <LuNotebookPen /> },
   ];
 
   useEffect(() => {

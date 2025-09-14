@@ -89,75 +89,79 @@ const CartScreen: React.FC = () => {
     }
   };
 
-  const confirmPayment = async () => {
-    if (!clientId || !userCoords || !currentRestaurantId || !currentItems) return;
+const confirmPayment = async () => {
+  if (!clientId || !userCoords || !currentRestaurantId || !currentItems) return;
 
-    try {
-      const detalles = currentItems.map((item) => ({
-        id_producto: item.product,
-        cantidad: item.quantity,
-      }));
+  try {
+    const detalles = currentItems.map((item) => ({
+      id_producto: item.product,
+      cantidad: item.quantity,
+    }));
 
-      const subtotal = currentItems.reduce(
-        (acc, item) => acc + item.productDetails.precio * item.quantity,
-        0
-      );
+    const subtotal = currentItems.reduce(
+      (acc, item) => acc + item.productDetails.precio * item.quantity,
+      0
+    );
 
-      const factorCorrecionRuta = 1.30;
-      const deliveryFee =
-        userCoords && restaurantCoords[currentRestaurantId]
-          ? 1.5 + getDistanceKm(userCoords, restaurantCoords[currentRestaurantId]) * factorCorrecionRuta * 0.5
-          : subtotal * 0.1 + 1.5;
-      const total = subtotal + deliveryFee;
+    const factorCorrecionRuta = 1.30;
+    const deliveryFee =
+      userCoords && restaurantCoords[currentRestaurantId]
+        ? 1.5 + getDistanceKm(userCoords, restaurantCoords[currentRestaurantId]) * factorCorrecionRuta * 0.5
+        : subtotal * 0.1 + 1.5;
+    const total = subtotal + deliveryFee;
 
-      const payload = {
-        id_cliente: clientId,
-        id_restaurant: currentRestaurantId,
-        direccion_de_entrega: userCoords,
-        detalles,
-        total,
-      };
+    const payload = {
+      id_cliente: clientId,
+      id_restaurant: currentRestaurantId,
+      direccion_de_entrega: userCoords,
+      detalles,
+      total,
+    };
 
-      // Crear el pedido
-      await axios.post('https://rikoapi.onrender.com/api/pedido/pedidos', payload);
+    // Crear el pedido
+    await axios.post('https://rikoapi.onrender.com/api/pedido/pedidos', payload);
 
-      // Eliminar todos los productos del restaurante en el carrito
-      await Promise.all(
-        currentItems.map(async (item) => {
-          try {
-            await axios.post('https://rikoapi.onrender.com/api/cart/cart/remove', {
-              productId: item.product,
-              clientId,
-            });
-          } catch (error) {
-            console.error(`Error al eliminar producto ${item.product}:`, error);
-          }
-        })
-      );
-
-      // Actualizar el estado local del carrito
-      setCart((prev) =>
-        prev
-          ? {
-              ...prev,
-              items: prev.items.filter((item) => item.id_restaurant !== currentRestaurantId),
-            }
-          : prev
-      );
-
-      // Cerrar el modal y mostrar confirmación
-      setShowModal(false);
-      setPagoMovilData(null);
-      setCurrentRestaurantId(null);
-      setCurrentItems([]);
-      alert('Pedido generado con éxito');
-      navigate(`/pedidos`);
-    } catch (error: any) {
-      console.error('Error al generar pedido:', error.response?.data || error.message);
-      alert('Error al generar el pedido');
-      setShowModal(false);
+    // Eliminar productos del carrito uno por uno, solo para el restaurante actual
+    for (const item of currentItems) {
+      if (item.id_restaurant === currentRestaurantId) {
+        try {
+          await axios.post('https://rikoapi.onrender.com/api/cart/cart/remove', {
+            productId: item.product,
+            clientId,
+          });
+          console.log(`Producto ${item.product} eliminado del carrito.`);
+        } catch (error) {
+          console.error(`Error al eliminar producto ${item.product}:`, error);
+          // Opcional: Puedes decidir si continuar o detener el proceso aquí
+          // Por ejemplo, puedes lanzar el error para detener el proceso
+          // throw error;
+        }
+      }
     }
-  };
+
+    // Actualizar el estado local del carrito
+    setCart((prev) =>
+      prev
+        ? {
+            ...prev,
+            items: prev.items.filter((item) => item.id_restaurant !== currentRestaurantId),
+          }
+        : prev
+    );
+
+    // Cerrar el modal y mostrar confirmación
+    setShowModal(false);
+    setPagoMovilData(null);
+    setCurrentRestaurantId(null);
+    setCurrentItems([]);
+    alert('Pedido generado con éxito');
+    navigate(`/pedidos`);
+  } catch (error: any) {
+    console.error('Error al generar pedido:', error.response?.data || error.message);
+    alert('Error al generar el pedido');
+    setShowModal(false);
+  }
+};
 
   useEffect(() => {
     if (!clientId) {

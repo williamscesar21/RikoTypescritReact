@@ -140,7 +140,14 @@ const ClientScreen: React.FC = () => {
     }
   };
 
-  if (!client) return null;
+  if (!client) {
+    return (
+      <div className="loading-container">
+        <img src="/logoNaranja.png" alt="loading" className="loading-image" />
+        <p className="loading-text">Cargando...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="client-screen-container">
