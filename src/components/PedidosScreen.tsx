@@ -269,6 +269,7 @@ const handleCancelarPedido = async (idPedido: string) => {
               </>
             )}
             <button className='vermasbutton' onClick={()=> window.location.href = `/pedido/${pedido._id}`}>Ver detalles</button>
+            <button className='vermasbutton' onClick={()=> window.location.href = `/chat/${pedido._id}`}>Ir al chat</button>
           </div>
         ))}
     </div>

@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Minus, Plus, Trash2 } from 'react-feather';
 import '../css/CartScreen.css';
+import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from "../firebase"; // asegúrate que está importado
 
 interface ProductDetails {
   _id: string;
@@ -119,7 +121,33 @@ const confirmPayment = async () => {
     };
 
     // Crear el pedido
-    await axios.post('https://rikoapi.onrender.com/api/pedido/pedidos', payload);
+    const response = await axios.post('https://rikoapi.onrender.com/api/pedido/pedidos', payload);
+
+    const orderId = response.data.id
+      if (!orderId) {
+        throw new Error("El backend no devolvió un orderId válido");
+      }
+
+      // Crear sala de chat en Firestore
+      await setDoc(doc(db, "RikoChat", orderId), {
+        orderId,
+        clientId,
+        restaurantId: currentRestaurantId,
+        repartidorId: null,
+        createdAt: serverTimestamp(),
+      });
+
+      // Enviar mensaje inicial con link a Google Maps
+
+    const mapsUrl = `https://www.google.com/maps?q=${userCoords}`;
+
+    await addDoc(collection(db, "RikoChat", orderId, "messages"), {
+      senderId: clientId,
+      senderType: "client",
+      content: mapsUrl,   // 👈 Guarda SOLO el link
+      type: "location",
+      timestamp: serverTimestamp(),
+    });
 
     // Eliminar productos del carrito uno por uno, solo para el restaurante actual
     for (const item of currentItems) {
@@ -155,7 +183,7 @@ const confirmPayment = async () => {
     setCurrentRestaurantId(null);
     setCurrentItems([]);
     alert('Pedido generado con éxito');
-    navigate(`/pedidos`);
+    navigate(`/chat/${orderId}`);
   } catch (error: any) {
     console.error('Error al generar pedido:', error.response?.data || error.message);
     alert('Error al generar el pedido');

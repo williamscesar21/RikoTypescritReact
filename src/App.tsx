@@ -13,67 +13,106 @@ import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
 import PedidoDetailsScreen from './components/PedidoDetailsScreen';
 import ClientScreen from './components/ClientScreen';
+import ChatScreen from './components/ChatScreen';
 
 const App: React.FC = () => {
   const token = localStorage.getItem('token');
 
-  // 🛰️ Efecto para rastreo de ubicación continuo
-  useEffect(() => {
-    let watchIdCapacitor: string | null = null;
-    let watchIdWeb: number | null = null;
+// 🛰️ Efecto para rastreo de ubicación continuo
+useEffect(() => {
+  let watchIdCapacitor: string | null = null;
+  let watchIdWeb: number | null = null;
 
-    const startTracking = async () => {
-      try {
-        if (Capacitor.getPlatform() !== 'web') {
-          const permission = await Geolocation.requestPermissions();
-          if (permission.location === 'granted') {
-            watchIdCapacitor = await Geolocation.watchPosition({}, (position, err) => {
+  const startTracking = async () => {
+    try {
+      if (Capacitor.getPlatform() !== "web") {
+        // 📱 Capacitor (Android/iOS)
+        const permission = await Geolocation.requestPermissions();
+        if (permission.location === "granted") {
+          watchIdCapacitor = await Geolocation.watchPosition(
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0,
+            },
+            (position, err) => {
               if (err) {
-                console.error('❌ Error tracking (Capacitor):', err);
+                console.error("❌ Error tracking (Capacitor):", err);
                 return;
               }
 
-              if (position && position.coords) {
-                const coords = `${position.coords.latitude}, ${position.coords.longitude}`;
-                localStorage.setItem('userLocation', coords);
-                console.log('📡 Ubicación actual (Capacitor):', coords);
+              if (position?.coords) {
+                const coords = `${position.coords.latitude},${position.coords.longitude}`;
+                const accuracy = position.coords.accuracy || null;
+
+                localStorage.setItem("userLocation", coords);
+                if (accuracy) {
+                  localStorage.setItem("userAccuracy", accuracy.toString());
+                }
+
+                console.log(
+                  "📡 Ubicación actual (Capacitor):",
+                  coords,
+                  "| Precisión:",
+                  accuracy,
+                  "m"
+                );
               }
-            });
-          }
-        } else {
-          if ('geolocation' in navigator) {
-            watchIdWeb = navigator.geolocation.watchPosition(
-              (position) => {
-                const coords = `${position.coords.latitude}, ${position.coords.longitude}`;
-                localStorage.setItem('userLocation', coords);
-                console.log('📡 Ubicación actual (Web):', coords);
-              },
-              (error) => {
-                console.error('❌ Error tracking (Web):', error);
-              },
-              { enableHighAccuracy: true }
-            );
-          }
-        }
-      } catch (error) {
-        console.error('❌ Error general al iniciar el tracking de ubicación:', error);
-      }
-    };
-
-    if (token) startTracking();
-
-    return () => {
-      if (Capacitor.getPlatform() !== 'web') {
-        if (watchIdCapacitor) {
-          Geolocation.clearWatch({ id: watchIdCapacitor });
+            }
+          );
         }
       } else {
-        if (watchIdWeb !== null && navigator.geolocation.clearWatch) {
-          navigator.geolocation.clearWatch(watchIdWeb);
+        // 💻 Web (navigator.geolocation)
+        if ("geolocation" in navigator) {
+          watchIdWeb = navigator.geolocation.watchPosition(
+            (position) => {
+              const coords = `${position.coords.latitude},${position.coords.longitude}`;
+              const accuracy = position.coords.accuracy || null;
+
+              localStorage.setItem("userLocation", coords);
+              if (accuracy) {
+                localStorage.setItem("userAccuracy", accuracy.toString());
+              }
+
+              console.log(
+                "📡 Ubicación actual (Web):",
+                coords,
+                "| Precisión:",
+                accuracy,
+                "m"
+              );
+            },
+            (error) => {
+              console.error("❌ Error tracking (Web):", error);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0,
+            }
+          );
         }
       }
-    };
-  }, [token]);
+    } catch (error) {
+      console.error("❌ Error general al iniciar el tracking de ubicación:", error);
+    }
+  };
+
+  if (token) startTracking();
+
+  return () => {
+    if (Capacitor.getPlatform() !== "web") {
+      if (watchIdCapacitor) {
+        Geolocation.clearWatch({ id: watchIdCapacitor });
+      }
+    } else {
+      if (watchIdWeb !== null && navigator.geolocation.clearWatch) {
+        navigator.geolocation.clearWatch(watchIdWeb);
+      }
+    }
+  };
+}, [token]);
+
 
   return (
     <BrowserRouter>
@@ -91,6 +130,7 @@ const App: React.FC = () => {
               <Route path="/restaurants" element={<RestaurantsSection />} />
               <Route path="/pedidos" element={<PedidosScreen />} />
               <Route path="/pedido/:id" element={<PedidoDetailsScreen />} />
+              <Route path="/chat/:orderId" element={<ChatScreen />} /> {/* New route */}
               <Route path="*" element={<Navigate to="/home" />} />
             </Routes>
           </div>
