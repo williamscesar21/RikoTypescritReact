@@ -4,6 +4,11 @@ const config: CapacitorConfig = {
   appId: 'com.webbonding.rikoapp',
   appName: 'riko-app-delivery',
   webDir: 'dist',
+  server: {
+    cleartext: true,
+    androidScheme: "http",
+    iosScheme: "http"
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 3000,       // ⏱ duración (ms)
