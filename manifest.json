@@ -1,0 +1,22 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "rikotypescritreact.onrender",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "rikotypescritreact.onrender",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "https://rikotypescritreact.onrender.com/vite.svg",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "https://rikotypescritreact.onrender.com/favicon.ico",
+      "type": "image/x-icon"
+    }
+  ],
+  "id": "RikoApp"
+}
