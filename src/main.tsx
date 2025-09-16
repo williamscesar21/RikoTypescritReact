@@ -5,14 +5,6 @@ import App from './App.tsx'
 
 import { StatusBar } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
-import { CapacitorUpdater } from '@capgo/capacitor-updater';
-
-// 👇 Forzar canal de producción antes de notifyAppReady
-CapacitorUpdater.setChannel({ channel: 'production' }).then(() => {
-  CapacitorUpdater.notifyAppReady();
-});
-
-CapacitorUpdater.notifyAppReady();
 
 if (Capacitor.isNativePlatform()) {
   // Ocultar completamente la barra de estado
