@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../css/DishRow.css';
+import '../css/Dishrow.css';
 import BotonAgregar from './BotonAgregar';
 import ModalAgregarProducto from './ModalAgregarProducto';
 
