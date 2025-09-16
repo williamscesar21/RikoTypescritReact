@@ -13,6 +13,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
+  padding-top: 30px;
   background-color: #fdebe0;
 }
 
@@ -21,8 +22,12 @@
 }
 
 .upload-btn {
-  padding: 6px 10px;
-  font-size: 0.85rem;
+ align-items: center;
+ align-content: center;
+    display: flex;
+    justify-content: center;
+  padding: 8px 12px;
+  font-size: 1.5rem;
   background-color: #022dbd;
   color: #fff;
   border: none;
@@ -98,9 +103,10 @@
   border: 1px solid #ddd;
   border-radius: 16px;
   font-size: 0.9rem;
+  width: 100%;
 }
 
-.input-container button {
+.send-btn {
   padding: 8px 12px;
   background-color: #ff6a00;
   color: #fff;
@@ -198,4 +204,27 @@
 
 .maps-button:hover {
   background-color: #e65c00;
+}
+
+.custom-upload-btn {
+  background: #ff6a00;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: inline-block;
+  transition: background 0.2s ease;
+}
+
+.custom-upload-btn:hover {
+  background: #e65c00;
+}
+
+.file-name {
+  margin-left: 10px;
+  font-size: 0.85rem;
+  color: #555;
+  font-style: italic;
 }

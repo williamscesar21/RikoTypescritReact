@@ -13,6 +13,7 @@ import { db, storage, auth } from '../firebase';
 import '../css/ChatScreen.css';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'react-feather';
+import { CiImageOn } from 'react-icons/ci';
 
 interface Message {
   id: string;
@@ -107,9 +108,6 @@ const ChatScreen: React.FC = () => {
       <div className="chat-header">
         <h2>Pedido</h2>
         <h6 style={{ color: '#FF7F00' }}> #{orderId}</h6>
-        <button className="upload-btn" onClick={() => setShowModal(true)}>
-          Subir Comprobante de Pago
-        </button>
       </div>
 
 {/* MENSAJES */}
@@ -151,7 +149,10 @@ const ChatScreen: React.FC = () => {
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Escribe un mensaje..."
         />
-        <button onClick={sendMessage}>Enviar</button>
+        <button className="upload-btn" onClick={() => setShowModal(true)}>
+          <CiImageOn />
+        </button>
+        <button className="send-btn" onClick={sendMessage}>Enviar</button>
       </div>
 
       {/* MODAL */}
@@ -159,11 +160,23 @@ const ChatScreen: React.FC = () => {
         <div className="modal-overlay">
           <div className="modal">
             <h3>Subir comprobante</h3>
+            {/* Input oculto */}
             <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            type="file"
+            id="file-upload"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
+
+            {/* Label personalizado como botón */}
+            <label htmlFor="file-upload" className="custom-upload-btn">
+            📎 Subir archivo
+            </label>
+
+            {/* Nombre del archivo si existe */}
+            {file && <span className="file-name">{file.name}</span>}
+
             {file && (
               <div className="preview">
                 <img src={URL.createObjectURL(file)} alt="preview" />

@@ -65,6 +65,7 @@ const CartScreen: React.FC = () => {
   const navigate = useNavigate();
   const clientId = localStorage.getItem('clientId');
   const userCoords = localStorage.getItem('userLocation');
+  const [isPaying, setIsPaying] = useState(false); // 👈 estado nuevo
 
   const handlePlaceOrder = async (restaurantId: string, items: CartItem[]) => {
     if (!clientId) return;
@@ -95,6 +96,7 @@ const confirmPayment = async () => {
   if (!clientId || !userCoords || !currentRestaurantId || !currentItems) return;
 
   try {
+    setIsPaying(true); // 👈 bloquear el botón y mostrar "..."
     const detalles = currentItems.map((item) => ({
       id_producto: item.product,
       cantidad: item.quantity,
@@ -182,7 +184,7 @@ const confirmPayment = async () => {
     setPagoMovilData(null);
     setCurrentRestaurantId(null);
     setCurrentItems([]);
-    alert('Pedido generado con éxito');
+    setIsPaying(false); // 👈 reactivar botón después de la respuesta
     navigate(`/chat/${orderId}`);
   } catch (error: any) {
     console.error('Error al generar pedido:', error.response?.data || error.message);
@@ -463,15 +465,16 @@ const confirmPayment = async () => {
                   setCurrentRestaurantId(null);
                   setCurrentItems([]);
                 }}
+                disabled={isPaying} // 👈 deshabilitar cancelar mientras procesa
               >
                 Cancelar
               </button>
               <button
                 className="modal-confirm-button"
                 onClick={confirmPayment}
-                disabled={!pagoMovilData}
+                disabled={!pagoMovilData || isPaying} // 👈 deshabilitar confirmar si no hay datos o mientras procesa
               >
-                Ya Pagué
+                {isPaying ? "..." : "Ya Pagué"} {/* 👈 mostrar ... mientras procesa */}
               </button>
             </div>
           </div>

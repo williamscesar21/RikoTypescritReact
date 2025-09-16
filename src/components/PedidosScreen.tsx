@@ -268,8 +268,10 @@ const handleCancelarPedido = async (idPedido: string) => {
                 ) : null}
               </>
             )}
+            <div className="botones-pedido" style={{display: 'flex', gap: '0.5rem', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center'}}>
             <button className='vermasbutton' onClick={()=> window.location.href = `/pedido/${pedido._id}`}>Ver detalles</button>
-            <button className='vermasbutton' onClick={()=> window.location.href = `/chat/${pedido._id}`}>Ir al chat</button>
+            <button className='chatbutton' onClick={()=> window.location.href = `/chat/${pedido._id}`}>Ir al chat</button>
+            </div>
           </div>
         ))}
     </div>

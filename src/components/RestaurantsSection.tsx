@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import '../css/RestaurantsSection.css';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'react-feather';
+import { ArrowLeft } from 'react-feather'; 
+import { CiStar } from "react-icons/ci";
 
 interface Restaurant {
   _id: string;
@@ -12,6 +13,7 @@ interface Restaurant {
   calificacion: {
     promedio: number;
   };
+  suspendido?: boolean; // 👈 agregado
 }
 
 const RestaurantsSection: React.FC = () => {
@@ -24,10 +26,17 @@ const RestaurantsSection: React.FC = () => {
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        const response = await axios.get<Restaurant[]>('https://rikoapi.onrender.com/api/restaurant/restaurants');
-        const sorted = response.data.sort((a, b) => b.calificacion.promedio - a.calificacion.promedio);
-        setRestaurants(sorted);
-        setFilteredRestaurants(sorted);
+        const response = await axios.get<Restaurant[]>(
+          'https://rikoapi.onrender.com/api/restaurant/restaurants'
+        );
+
+        // 🔎 Filtrar suspendidos y ordenar por calificación
+        const activeRestaurants = response.data
+          .filter((rest) => rest.suspendido === false || rest.suspendido === undefined)
+          .sort((a, b) => b.calificacion.promedio - a.calificacion.promedio);
+
+        setRestaurants(activeRestaurants);
+        setFilteredRestaurants(activeRestaurants);
       } catch (error) {
         console.error('Error al cargar restaurantes:', error);
       } finally {
@@ -40,9 +49,10 @@ const RestaurantsSection: React.FC = () => {
 
   useEffect(() => {
     const term = searchTerm.toLowerCase();
-    const filtered = restaurants.filter(rest =>
-      rest.nombre.toLowerCase().includes(term) ||
-      rest.descripcion.toLowerCase().includes(term)
+    const filtered = restaurants.filter(
+      (rest) =>
+        rest.nombre.toLowerCase().includes(term) ||
+        rest.descripcion.toLowerCase().includes(term)
     );
     setFilteredRestaurants(filtered);
   }, [searchTerm, restaurants]);
@@ -58,7 +68,7 @@ const RestaurantsSection: React.FC = () => {
 
   return (
     <section className="restaurants-section">
-      <div className="header-row ">
+      <div className="header-row">
         <button onClick={() => navigate(-1)} className="back-button">
           <ArrowLeft size={20} />
         </button>
@@ -73,7 +83,7 @@ const RestaurantsSection: React.FC = () => {
         className="restaurant-search-input animate-slide-in"
       />
 
-      <div className="restaurant-s-grid ">
+      <div className="restaurant-s-grid">
         {filteredRestaurants.length > 0 ? (
           filteredRestaurants.map((rest) => (
             <div
@@ -81,13 +91,20 @@ const RestaurantsSection: React.FC = () => {
               onClick={() => navigate(`/restaurant/${rest._id}`)}
               className="restaurant-s-card animate-slide-in"
             >
-              <img src={rest.images[0]} alt={rest.nombre} className="restaurant-s-image" />
+              <img
+                src={rest.images[0]}
+                alt={rest.nombre}
+                className="restaurant-s-image"
+              />
               <div className="restaurant-s-info">
                 <p className="restaurant-s-name">{rest.nombre}</p>
                 <p className="restaurant-s-desc">{rest.descripcion}</p>
                 <div className="restaurant-s-rating">
                   {rest.calificacion.promedio > 0 ? (
-                    <span>⭐ {rest.calificacion.promedio.toFixed(1)}</span>
+                    <span className="rating" style={{ fontWeight: 'bold', color: '#FF7F00', margin:'0', alignItems:'center', display:'flex', gap:'0.2rem', fontSize:'0.8rem' }}>
+                      <CiStar />
+                      {rest.calificacion.promedio.toFixed(1)}
+                    </span>
                   ) : (
                     <span className="no-rating">Sin calificación</span>
                   )}

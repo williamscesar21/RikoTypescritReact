@@ -20,6 +20,7 @@ interface Restaurant {
     fin: string;
   }[];
   images: string[] | string;
+  suspendido?: boolean; // 👈 agregado
 }
 
 interface Product {
@@ -30,6 +31,7 @@ interface Product {
   images: string[];
   id_restaurant: string;
   tags?: string[];
+  suspendido?: boolean; // 👈 agregado
 }
 
 const RestaurantScreen: React.FC = () => {
@@ -42,23 +44,31 @@ const RestaurantScreen: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      axios.get(`https://rikoapi.onrender.com/api/restaurant/restaurant/${id}`)
-        .then(response => setRestaurant(response.data))
-        .catch(error => console.error("Error fetching restaurant data:", error));
+      // 🔹 Traer datos del restaurante
+      axios
+        .get(`https://rikoapi.onrender.com/api/restaurant/restaurant/${id}`)
+        .then((response) => setRestaurant(response.data))
+        .catch((error) =>
+          console.error('Error fetching restaurant data:', error)
+        );
 
-      axios.get('https://rikoapi.onrender.com/api/product/product')
-        .then(response => {
-          const filtered = response.data.filter((p: Product) => p.id_restaurant === id);
+      // 🔹 Traer productos y filtrar suspendidos
+      axios
+        .get('https://rikoapi.onrender.com/api/product/product')
+        .then((response) => {
+          const filtered = response.data.filter(
+            (p: Product) =>
+              p.id_restaurant === id && (p.suspendido === false || p.suspendido === undefined)
+          );
           setProducts(filtered);
 
           // Extraer y normalizar tags únicos
-         const allTags: string[] = Array.from(new Set(
-            filtered.flatMap((p: Product) => p.tags || [])
-          ));
+          const allTags: string[] = Array.from(
+            new Set(filtered.flatMap((p: Product) => p.tags || []))
+          );
           setTags(allTags);
-
         })
-        .catch(error => console.error("Error fetching products:", error));
+        .catch((error) => console.error('Error fetching products:', error));
     }
   }, [id]);
 
@@ -67,7 +77,9 @@ const RestaurantScreen: React.FC = () => {
     const now = new Date();
     const day = now.toLocaleDateString('es-US', { weekday: 'long' }).toLowerCase();
     const currentTime = now.getHours() * 100 + now.getMinutes();
-    const today = restaurant.horario_de_trabajo.find(d => d.dia.toLowerCase() === day);
+    const today = restaurant.horario_de_trabajo.find(
+      (d) => d.dia.toLowerCase() === day
+    );
     if (today) {
       const open = parseInt(today.inicio.replace(':', ''));
       const close = parseInt(today.fin.replace(':', ''));
@@ -76,10 +88,13 @@ const RestaurantScreen: React.FC = () => {
     return false;
   };
 
-  const imageUrl = Array.isArray(restaurant?.images) ? restaurant.images[0] : restaurant?.images;
+  const imageUrl = Array.isArray(restaurant?.images)
+    ? restaurant.images[0]
+    : restaurant?.images;
 
+  // 🔹 Filtrar productos por tag
   const filteredProducts = selectedTag
-    ? products.filter(p => p.tags?.includes(selectedTag))
+    ? products.filter((p) => p.tags?.includes(selectedTag))
     : products;
 
   if (!restaurant) {
@@ -87,6 +102,19 @@ const RestaurantScreen: React.FC = () => {
       <div className="loading-screen">
         <img src="/logoNaranja.png" alt="loading" />
         <h2 style={{ color: 'black' }}>Cargando...</h2>
+      </div>
+    );
+  }
+  if (restaurant.suspendido) {
+    return (
+      <div className="suspended-screen" style={{ textAlign: 'center', padding: '2rem', justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column', gap: '1rem', height: '90vh' }}>
+        <img src="/suspendido.png" alt="suspended" className="suspended-image" style={{ width: '100px' }} />
+        <h2 style={{ color: 'black', textAlign: 'center' }}>
+          Lo sentimos, este restaurante está temporalmente suspendido.
+        </h2>
+        <button onClick={() => navigate('/restaurants')} className="browse-button">
+            Explorar otros restaurantes
+        </button>
       </div>
     );
   }
@@ -106,7 +134,10 @@ const RestaurantScreen: React.FC = () => {
           <div className="meta">
             <div className="meta-item">
               <Star size={16} color="#facc15" />
-              <span>{restaurant.calificacion.promedio} · {restaurant.calificacion.calificaciones.length}</span>
+              <span>
+                {restaurant.calificacion.promedio} ·{' '}
+                {restaurant.calificacion.calificaciones.length}
+              </span>
             </div>
             <div className="meta-item">
               <MapPin size={16} color="#facc15" />

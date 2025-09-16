@@ -11,7 +11,13 @@ interface Product {
   precio: number;
   descripcion: string;
   images: string[];
-  id_restaurant?: string;
+  id_restaurant: string;
+  suspendido?: boolean;
+}
+
+interface Restaurant {
+  _id: string;
+  suspendido?: boolean;
 }
 
 const ITEMS_PER_PAGE = 5;
@@ -26,18 +32,55 @@ const ProductList: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchProductsAndRestaurants = async () => {
       try {
-        const response = await axios.get('https://rikoapi.onrender.com/api/product/product');
-        setProducts(response.data);
+        // 1. Traer todos los productos
+        const { data: allProducts } = await axios.get<Product[]>(
+          'https://rikoapi.onrender.com/api/product/product'
+        );
+
+        // 2. Obtener IDs únicos de restaurantes
+        const uniqueRestaurantIds = [
+          ...new Set(allProducts.map((p) => p.id_restaurant)),
+        ];
+
+        // 3. Traer datos de cada restaurante
+        const restaurantsData = await Promise.all(
+          uniqueRestaurantIds.map(async (id) => {
+            try {
+              const { data } = await axios.get<Restaurant>(
+                `https://rikoapi.onrender.com/api/restaurant/restaurant/${id}`
+              );
+              return { id, suspendido: data.suspendido };
+            } catch (error) {
+              console.error(`Error obteniendo restaurante ${id}`, error);
+              return { id, suspendido: true }; // Si falla, lo marcamos suspendido
+            }
+          })
+        );
+
+        // 4. Crear un mapa {id_restaurant: suspendido}
+        const restaurantMap: Record<string, boolean> = {};
+        restaurantsData.forEach((r) => {
+          restaurantMap[r.id] = r.suspendido ?? false;
+        });
+
+        // 5. Filtrar productos
+        const filteredProducts = allProducts.filter(
+          (p) =>
+            (p.suspendido === false || p.suspendido === undefined) &&
+            restaurantMap[p.id_restaurant] === false
+        );
+
+        setProducts(filteredProducts);
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching products or restaurants:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchProductsAndRestaurants();
   }, []);
 
   const truncateDescription = (description: string) => {
@@ -55,7 +98,10 @@ const ProductList: React.FC = () => {
   };
 
   const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
-  const paginatedProducts = products.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const paginatedProducts = products.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const goToPrevious = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const goToNext = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
@@ -72,14 +118,25 @@ const ProductList: React.FC = () => {
             onClick={() => goToProductScreen(item._id)}
             role="button"
             tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter') goToProductScreen(item._id); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') goToProductScreen(item._id);
+            }}
             style={{ cursor: 'pointer' }}
           >
-            <img src={item.images[0]} alt={item.nombre} className="product-image" />
+            <img
+              src={item.images[0]}
+              alt={item.nombre}
+              className="product-image"
+            />
             <div className="product-info">
               <h3 className="product-title">{item.nombre}</h3>
-              <p className="product-desc">{truncateDescription(item.descripcion)}</p>
-              <div className="price-button-container" onClick={(e) => e.stopPropagation()}>
+              <p className="product-desc">
+                {truncateDescription(item.descripcion)}
+              </p>
+              <div
+                className="price-button-container"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <span className="product-price">${item.precio.toFixed(2)}</span>
                 <BotonAgregar onAgregar={() => openModal(item)} />
               </div>
@@ -88,12 +145,25 @@ const ProductList: React.FC = () => {
         ))}
       </div>
 
-      {/* Pagination controls */}
       {products.length > ITEMS_PER_PAGE && (
         <div className="pagination-controls">
-          <button style={{display: 'none'}} onClick={goToPrevious} disabled={currentPage === 1}>Anterior</button>
-          <span style={{display: 'none'}}>Página {currentPage} de {totalPages}</span>
-          <button style={{display: 'none'}} onClick={goToNext} disabled={currentPage === totalPages}>Siguiente</button>
+          <button
+            style={{ display: 'none' }}
+            onClick={goToPrevious}
+            disabled={currentPage === 1}
+          >
+            Anterior
+          </button>
+          <span style={{ display: 'none' }}>
+            Página {currentPage} de {totalPages}
+          </span>
+          <button
+            style={{ display: 'none' }}
+            onClick={goToNext}
+            disabled={currentPage === totalPages}
+          >
+            Siguiente
+          </button>
         </div>
       )}
 
@@ -106,7 +176,7 @@ const ProductList: React.FC = () => {
           }}
           item={{
             ...selectedProduct,
-            id_restaurant: selectedProduct.id_restaurant || ''
+            id_restaurant: selectedProduct.id_restaurant || '',
           }}
         />
       )}

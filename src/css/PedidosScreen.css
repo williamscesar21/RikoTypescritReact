@@ -163,26 +163,43 @@
   font-style: italic;
 }
 
-.vermasbutton{
-  margin-top: 1rem;
-  background-color: #8d8d8d;
-  color: #fff;
+.botones-pedido button {
+  flex: 1; /* hace que ambos ocupen el mismo espacio */
+  margin-top: 0.5rem;
   border: none;
   padding: 0.6rem 1.2rem;
   border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  width: 100%;
   transition: background-color 0.3s ease;
 }
+
+.vermasbutton {
+  background-color: #8d8d8d;
+  color: #fff;
+}
+
+.vermasbutton:hover {
+  background-color: #6e6e6e;
+}
+
+.chatbutton {
+  background-color: #15b600;
+  color: #fff;
+}
+
+.chatbutton:hover {
+  background-color: #0f8a00;
+}
+
 
 .cancelar-pedido-button {
   margin-top: 1rem;
   background-color: #ca030a;
   color: #fff;
   border: none;
-  padding: 0.6rem 1.2rem;
+  padding: 0.3rem 1.2rem;
   border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 600;
