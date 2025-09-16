@@ -7,8 +7,10 @@ import { StatusBar } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { CapacitorUpdater } from '@capgo/capacitor-updater';
 
-// Forzar canal production (no muestra banner de test)
-CapacitorUpdater.setChannel({ channel: 'production' });
+// 👇 Forzar canal de producción antes de notifyAppReady
+CapacitorUpdater.setChannel({ channel: 'production' }).then(() => {
+  CapacitorUpdater.notifyAppReady();
+});
 
 CapacitorUpdater.notifyAppReady();
 
