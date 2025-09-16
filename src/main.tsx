@@ -7,8 +7,10 @@ import { StatusBar } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { CapacitorUpdater } from '@capgo/capacitor-updater';
 
-CapacitorUpdater.notifyAppReady();
+// Forzar canal production (no muestra banner de test)
+CapacitorUpdater.setChannel({ channel: 'production' });
 
+CapacitorUpdater.notifyAppReady();
 
 if (Capacitor.isNativePlatform()) {
   // Ocultar completamente la barra de estado
