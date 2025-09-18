@@ -1,8 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import '../css/HomeScreen.css';
 import RestaurantList from './RestaurantList';
 import ProductList from './ProductList';
+import DishRow from './Dishrow';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 // Cada banner ahora tiene image + id_restaurant
 const banners = [
@@ -20,10 +22,23 @@ const banners = [
   },
 ];
 
+interface Product {
+  _id: string;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  images: string[];
+  id_restaurant: string;
+}
+
 const HomeScreen: React.FC = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const clientID = localStorage.getItem('clientId');
   const navigate = useNavigate();
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let currentIndex = 0;
@@ -38,6 +53,31 @@ const HomeScreen: React.FC = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Función de búsqueda
+  const searchProducts = async (query: string) => {
+    if (!query.trim()) {
+      setProducts([]); // limpia resultados si está vacío
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.get("https://rikoapi.onrender.com/api/product/product");
+      const allProducts: Product[] = response.data;
+
+      // Filtro por coincidencia en el nombre
+      const filtered = allProducts.filter(p =>
+        p.nombre.toLowerCase().includes(query.toLowerCase())
+      );
+
+      setProducts(filtered);
+    } catch (error) {
+      console.error("Error buscando productos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="container-home">
@@ -56,36 +96,67 @@ const HomeScreen: React.FC = () => {
       {/* Search and Location */}
       <div className="searchContainer animate-slide-in" style={{ animationDelay: '0.2s' }}>
         <div className="searchInputBox">
-          <input type="text" placeholder="Buscar productos" className="searchInput" />
+          <input
+            type="text"
+            placeholder="Buscar productos"
+            className="searchInput"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              searchProducts(e.target.value);
+            }}
+          />
         </div>
         <div className="location"></div>
       </div>
 
       {/* Banner Carousel */}
-      <div className="bannerCarousel animate-slide-in" style={{ animationDelay: '0.3s' }} ref={carouselRef}>
-        {banners.map((banner, i) => (
-          <div
-            className="bannerCard"
-            key={i}
-            onClick={() => navigate(`/restaurant/${banner.restaurantId}`)}
-            style={{ cursor: 'pointer' }}
-          >
-            <img src={banner.image} alt={`Banner ${i + 1}`} className="bannerImage" />
-          </div>
-        ))}
-      </div>
+      {!searchTerm && (
+        <div
+          className="bannerCarousel animate-slide-in"
+          style={{ animationDelay: '0.3s' }}
+          ref={carouselRef}
+        >
+          {banners.map((banner, i) => (
+            <div
+              className="bannerCard"
+              key={i}
+              onClick={() => navigate(`/restaurant/${banner.restaurantId}`)}
+              style={{ cursor: 'pointer' }}
+            >
+              <img src={banner.image} alt={`Banner ${i + 1}`} className="bannerImage" />
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* Productos */}
-      <div style={{ animationDelay: '0.5s' }}>
-        <h2 className="section-title-main">Productos populares</h2>
-        <ProductList />
-      </div>
+      {/* Resultados de búsqueda */}
+      {searchTerm && (
+        <div className="searchResults">
+          <h2 className="section-title-main">Resultados</h2>
+          {loading && <p>Cargando...</p>}
+          {!loading && products.length === 0 && <p>No se encontraron productos</p>}
+          {products.map((item) => (
+            <DishRow key={item._id} item={item} />
+          ))}
+        </div>
+      )}
+
+      {/* Productos populares */}
+      {!searchTerm && (
+        <div style={{ animationDelay: '0.5s' }}>
+          <h2 className="section-title-main">Productos populares</h2>
+          <ProductList />
+        </div>
+      )}
 
       {/* Restaurantes */}
-      <div style={{ animationDelay: '0.6s' }}>
-        <h2 className="section-title-main">Mejores Restaurantes</h2>
-        <RestaurantList />
-      </div>
+      {!searchTerm && (
+        <div style={{ animationDelay: '0.6s' }}>
+          <h2 className="section-title-main">Mejores Restaurantes</h2>
+          <RestaurantList />
+        </div>
+      )}
     </div>
   );
 };
