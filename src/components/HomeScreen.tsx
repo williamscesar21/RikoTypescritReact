@@ -1,23 +1,29 @@
 import React, { useEffect, useRef } from 'react';
-// import { FaMapMarkerAlt} from 'react-icons/fa';
 import '../css/HomeScreen.css';
 import RestaurantList from './RestaurantList';
 import ProductList from './ProductList';
+import { useNavigate } from 'react-router-dom';
 
-// const categories = [
-//   'Todo', 'Fast Food', 'Cenas', 'Postres', 'Bebidas', 'Comida Rápida',
-//   'Comida Italiana', 'Comida Mexicana', 'Comida Argentina', 'Comida Peruana'
-// ];
-
+// Cada banner ahora tiene image + id_restaurant
 const banners = [
-  'https://firebasestorage.googleapis.com/v0/b/rikoweb-ff259.appspot.com/o/delicious-indian-meal-with-biryani-rice-photo.jpeg?alt=media&token=d34e2bc2-99c0-440a-b00b-c2dc929d3a73',
-  'https://firebasestorage.googleapis.com/v0/b/rikoweb-ff259.appspot.com/o/Rectangle%2022.png?alt=media&token=7f6f1846-5906-45d5-8fbd-37ec0a4f2a26',
-  'https://d1csarkz8obe9u.cloudfront.net/posterpreviews/delicious-food-banner-template-design-cd3994e39458960f4f33e73b8c60edb9_screen.jpg?ts=1645769305',
+  {
+    image: 'https://firebasestorage.googleapis.com/v0/b/rikoweb-ff259.appspot.com/o/Riko%20App%20(1).png?alt=media&token=3f3ec92d-576a-4e54-9dd6-10b6d568a1d4',
+    restaurantId: '68cba7725df1093fb48b3f10'
+  },
+  {
+    image: 'https://firebasestorage.googleapis.com/v0/b/rikoweb-ff259.appspot.com/o/Riko%20App%20(1).png?alt=media&token=3f3ec92d-576a-4e54-9dd6-10b6d568a1d4',
+    restaurantId: '68cba7725df1093fb48b3f10'
+  },
+  {
+    image: 'https://firebasestorage.googleapis.com/v0/b/rikoweb-ff259.appspot.com/o/Riko%20App%20(1).png?alt=media&token=3f3ec92d-576a-4e54-9dd6-10b6d568a1d4',
+    restaurantId: '68cba7725df1093fb48b3f10'
+  },
 ];
 
 const HomeScreen: React.FC = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const clientID = localStorage.getItem('clientId');
+  const navigate = useNavigate();
 
   useEffect(() => {
     let currentIndex = 0;
@@ -38,9 +44,11 @@ const HomeScreen: React.FC = () => {
       {/* Header */}
       <div className="header animate-slide-in" style={{ animationDelay: '0.1s' }}>
         <img src="/logoNaranja.png" alt="Logo" className="logoImage" />
-        <div onClick={() => window.location.href = `/client/${clientID}`} className="headerIcons" style={{ backgroundColor: '#FF7F00', padding: '0rem 0.8rem', borderRadius: '20px' }}>
-          {/* <FaComments className="icon" />
-          <FaBell className="icon" /> */}
+        <div
+          onClick={() => navigate(`/client/${clientID}`)}
+          className="headerIcons"
+          style={{ backgroundColor: '#FF7F00', padding: '0rem 0.8rem', borderRadius: '20px' }}
+        >
           Mi cuenta
         </div>
       </div>
@@ -50,29 +58,22 @@ const HomeScreen: React.FC = () => {
         <div className="searchInputBox">
           <input type="text" placeholder="Buscar productos" className="searchInput" />
         </div>
-        <div className="location">
-          {/* <FaMapMarkerAlt />
-          <span>Acarigua</span> */}
-        </div>
+        <div className="location"></div>
       </div>
 
       {/* Banner Carousel */}
       <div className="bannerCarousel animate-slide-in" style={{ animationDelay: '0.3s' }} ref={carouselRef}>
-        {banners.map((src, i) => (
-          <div className="bannerCard" key={i}>
-            <img src={src} alt={`Banner ${i + 1}`} className="bannerImage" />
+        {banners.map((banner, i) => (
+          <div
+            className="bannerCard"
+            key={i}
+            onClick={() => navigate(`/restaurant/${banner.restaurantId}`)}
+            style={{ cursor: 'pointer' }}
+          >
+            <img src={banner.image} alt={`Banner ${i + 1}`} className="bannerImage" />
           </div>
         ))}
       </div>
-
-      {/* Categories */}
-      {/* <div className="categories animate-slide-in" style={{ animationDelay: '0.4s' }}>
-        {categories.map((cat, index) => (
-          <button key={index} className={index === 0 ? 'categoryButton active' : 'categoryButton'}>
-            {cat}
-          </button>
-        ))}
-      </div> */}
 
       {/* Productos */}
       <div style={{ animationDelay: '0.5s' }}>
