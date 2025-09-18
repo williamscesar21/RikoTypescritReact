@@ -445,13 +445,22 @@ const confirmPayment = async () => {
                 <p><strong>Banco:</strong> {pagoMovilData.nombreBanco} ({pagoMovilData.banco})</p>
                 <p>
                   <strong>Total a pagar:</strong> $
-                  {(
+                  {(() => {
+                    const totalUSD =
+                     (
                     currentItems.reduce((acc, item) => acc + item.productDetails.precio * item.quantity, 0) +
                     (userCoords && currentRestaurantId && restaurantCoords[currentRestaurantId]
                       ? 0.8 + getDistanceKm(userCoords, restaurantCoords[currentRestaurantId]) * 0.8 * 0.5
                       : currentItems.reduce((acc, item) => acc + item.productDetails.precio * item.quantity, 0) * 0.05 + 1.5)
-                  ).toFixed(2)}
+                  )
+
+                    const dolarEnBs = parseFloat(localStorage.getItem("dolarenbs") || "0");
+                    const totalBs = dolarEnBs ? (totalUSD * dolarEnBs).toFixed(2) : "N/A";
+
+                    return `${totalUSD.toFixed(2)} | ${totalBs} Bs`;
+                  })()}
                 </p>
+
               </div>
             ) : (
               <p>No se encontraron datos de Pago Móvil.</p>

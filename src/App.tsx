@@ -114,6 +114,26 @@ useEffect(() => {
 }, [token]);
 
 
+
+  // 💵 Efecto para obtener el dólar oficial y guardarlo en localStorage
+  useEffect(() => {
+    const fetchDollar = async () => {
+      try {
+        const res = await fetch("https://ve.dolarapi.com/v1/dolares/oficial");
+        const data = await res.json();
+
+        if (data?.promedio) {
+          localStorage.setItem("dolarenbs", data.promedio.toString());
+          console.log("💵 Dólar en BS guardado:", data.promedio);
+        }
+      } catch (error) {
+        console.error("❌ Error obteniendo dólar oficial:", error);
+      }
+    };
+
+    fetchDollar();
+  }, []);
+
   return (
     <BrowserRouter>
       {token ? (
