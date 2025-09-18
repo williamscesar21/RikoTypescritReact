@@ -90,19 +90,24 @@ const ForgotPassword: React.FC = () => {
     }
   };
 
-  // Paso 4: Cambiar contraseña
-  const changePassword = async () => {
+    // Paso 4: Cambiar contraseña
+    const changePassword = async () => {
     try {
-      await axios.put(`https://rikoapi.onrender.com/api/client/client-password/${clientId}`, {
-        newPassword,
-      });
-      alert("Contraseña actualizada con éxito ✅, ahora inicia sesión");
-      window.location.href = "/login";
+        await axios.put(
+        `https://rikoapi.onrender.com/api/client/client-actualizar-propiedad/${clientId}`,
+        {
+            propiedad: "password",
+            valor: newPassword,
+        }
+        );
+        alert("Contraseña actualizada con éxito ✅, ahora inicia sesión");
+        window.location.href = "/login";
     } catch (error) {
-      console.error(error);
-      alert("Error cambiando la contraseña ❌");
+        console.error(error);
+        alert("Error cambiando la contraseña ❌");
     }
-  };
+    };
+
 
   return (
     <div className="page-wrapper">
