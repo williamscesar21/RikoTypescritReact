@@ -284,6 +284,7 @@ const handleLogin = async (e: React.FormEvent) => {
                 <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
               <button type="submit" className="submit-button">Iniciar Sesión</button>
+              <p className="forgot-password" style={{ color: '#FF7F00', textAlign: 'center' }} onClick={() => window.location.href = '/forgot-password'}>¿Olvidaste tu contraseña?</p>
             </form>
           ) : (
             <form className="form" onSubmit={handleSignup}>

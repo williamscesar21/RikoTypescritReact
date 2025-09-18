@@ -14,6 +14,7 @@ import { Capacitor } from '@capacitor/core';
 import PedidoDetailsScreen from './components/PedidoDetailsScreen';
 import ClientScreen from './components/ClientScreen';
 import ChatScreen from './components/ChatScreen';
+import ForgotPassword from './components/ForgotPassword';
 
 const App: React.FC = () => {
   const token = localStorage.getItem('token');
@@ -158,6 +159,7 @@ useEffect(() => {
       ) : (
         <Routes>
           <Route path="/" element={<LoginScreen />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       )}
