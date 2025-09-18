@@ -99,6 +99,7 @@ const HomeScreen: React.FC = () => {
       <div className="searchContainer animate-slide-in" style={{ animationDelay: '0.2s' }}>
         <div className="searchInputBox">
           <input
+            style={{ color: 'black' }}
             type="text"
             placeholder="Buscar productos"
             className="searchInput"
@@ -137,7 +138,7 @@ const HomeScreen: React.FC = () => {
         <div className="searchResults">
           <h2 className="section-title-main">Resultados</h2>
           {loading && <p>Cargando...</p>}
-          {!loading && products.length === 0 && <p>No se encontraron productos</p>}
+          {!loading && products.length === 0 && <p style={{ color: 'red' }}>No se encontraron productos</p>}
           {products.map((item) => (
             <DishRow key={item._id} item={item} />
           ))}
