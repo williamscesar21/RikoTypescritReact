@@ -29,6 +29,7 @@ interface Product {
   precio: number;
   images: string[];
   id_restaurant: string;
+  suspendido?: boolean;
 }
 
 const HomeScreen: React.FC = () => {
@@ -68,7 +69,8 @@ const HomeScreen: React.FC = () => {
 
       // Filtro por coincidencia en el nombre
       const filtered = allProducts.filter(p =>
-        p.nombre.toLowerCase().includes(query.toLowerCase())
+        !p.suspendido &&
+        p.nombre.toLowerCase().includes(query.toLowerCase()),
       );
 
       setProducts(filtered);
