@@ -93,7 +93,7 @@ const ForgotPassword: React.FC = () => {
   // Paso 4: Cambiar contraseña
   const changePassword = async () => {
     try {
-      await axios.post(`https://rikoapi.onrender.com/api/client/client-password/${clientId}`, {
+      await axios.put(`https://rikoapi.onrender.com/api/client/client-password/${clientId}`, {
         newPassword,
       });
       alert("Contraseña actualizada con éxito ✅, ahora inicia sesión");
