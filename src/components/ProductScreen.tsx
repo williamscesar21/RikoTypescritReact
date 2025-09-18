@@ -22,13 +22,17 @@ interface Product {
   };
 }
 
-
+interface Restaurant {
+  _id: string;
+  nombre: string;
+}
 
 const ProductScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -43,17 +47,23 @@ const ProductScreen: React.FC = () => {
         setProduct(data);
         setSelectedImage(data.images[0]);
 
+        // traer restaurante
+        const restaurantData = await axios.get<Restaurant>(
+          `https://rikoapi.onrender.com/api/restaurant/restaurant/${data.id_restaurant}`
+        );
+        setRestaurant(restaurantData.data);
+
         // Cargar todos los productos para comparar
         const all = await axios.get<Product[]>(`https://rikoapi.onrender.com/api/product/product`);
         const related = all.data
-          .filter(p =>
-            p._id !== data._id &&
-            p.tags.some(tag => data.tags.includes(tag)) &&
-            !p.suspendido
+          .filter(
+            (p) =>
+              p._id !== data._id &&
+              p.tags.some((tag) => data.tags.includes(tag)) &&
+              !p.suspendido
           )
-          .slice(0, 6); // limitar a 6
+          .slice(0, 6);
         setRelatedProducts(related);
-
       } catch (err: any) {
         setError(err.message || 'Error al cargar el producto');
       } finally {
@@ -110,17 +120,20 @@ const ProductScreen: React.FC = () => {
           </div>
 
           <h1 className="product-name">{product.nombre}</h1>
+          {restaurant && <h4 onClick={() => navigate(`/restaurant/${restaurant._id}`)} className="restaurant-name" style={{ color: 'gray', textAlign: 'center', margin: '0px' }}>{restaurant.nombre}</h4>}
 
           {product.calificacion && (
             <div className="product-rating">
               {product.calificacion.promedio > 0 ? (
-                <span>⭐ {product.calificacion.promedio.toFixed(1)} ({product.calificacion.calificaciones.length})</span>
+                <span>
+                  ⭐ {product.calificacion.promedio.toFixed(1)} (
+                  {product.calificacion.calificaciones.length})
+                </span>
               ) : (
                 <span className="no-rating">Sin calificación</span>
               )}
             </div>
           )}
-
 
           <div className="price-and-counter">
             <span className="price">${product.precio.toFixed(2)}</span>
@@ -130,7 +143,9 @@ const ProductScreen: React.FC = () => {
           {product.tags?.length > 0 && (
             <div className="product-tags">
               {product.tags.map((tag, index) => (
-                <span key={index} className="tag-pill">{tag}</span>
+                <span key={index} className="tag-pill">
+                  {tag}
+                </span>
               ))}
             </div>
           )}
@@ -139,7 +154,6 @@ const ProductScreen: React.FC = () => {
           <p className="description">{product.descripcion}</p>
         </div>
 
-        {/* Productos similares */}
         {relatedProducts.length > 0 && (
           <div className="related-products">
             <h2 className="description-title">Productos similares</h2>
