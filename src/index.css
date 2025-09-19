@@ -45,6 +45,7 @@ body.keyboard-is-open .container-login {
 
 body {
   padding-top: 5vdh;
+  padding-bottom: env(safe-area-inset-bottom);
   margin: 0;
   display: flex;
   justify-content: center;
