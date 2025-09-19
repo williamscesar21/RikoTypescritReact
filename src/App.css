@@ -63,4 +63,5 @@ body.keyboard-is-open .container-login {
   height: 100%;
   overflow-y: auto;
   padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: 24px; /* deja espacio para la barra en Android */
 }

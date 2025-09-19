@@ -15,9 +15,31 @@ import PedidoDetailsScreen from './components/PedidoDetailsScreen';
 import ClientScreen from './components/ClientScreen';
 import ChatScreen from './components/ChatScreen';
 import ForgotPassword from './components/ForgotPassword';
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { Device } from "@capacitor/device";
 
 const App: React.FC = () => {
   const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    const fixSafeArea = async () => {
+      if (Capacitor.getPlatform() === "android") {
+        try {
+          const info = await Device.getInfo();
+          console.log("📱 Device info:", info);
+
+          // 👉 Ajuste manual: deja espacio extra de 16-24px (altura típica de la barra)
+          const main = document.querySelector(".main-content") as HTMLElement;
+          if (main) {
+            main.style.paddingBottom = "24px"; // puedes probar 16px, 20px o 24px
+          }
+        } catch (e) {
+          console.error("❌ Error ajustando safe area:", e);
+        }
+      }
+    };
+    fixSafeArea();
+  }, []);
 
 // 🛰️ Efecto para rastreo de ubicación continuo
 useEffect(() => {
@@ -134,6 +156,17 @@ useEffect(() => {
 
     fetchDollar();
   }, []);
+
+  useEffect(() => {
+  const adjustSafeArea = async () => {
+    if (Capacitor.getPlatform() === "android") {
+      // Opcional: poner la barra transparente
+      await StatusBar.setBackgroundColor({ color: "#000000" });
+      await StatusBar.setStyle({ style: Style.Light });
+    }
+  };
+  adjustSafeArea();
+}, []);
 
   return (
     <BrowserRouter>
