@@ -30,6 +30,10 @@ body.keyboard-is-open .container-login {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .back-button {
@@ -58,4 +62,5 @@ body.keyboard-is-open .container-login {
   flex: 1;
   height: 100%;
   overflow-y: auto;
+  padding-bottom: env(safe-area-inset-bottom);
 }
