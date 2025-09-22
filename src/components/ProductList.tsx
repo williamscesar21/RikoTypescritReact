@@ -95,6 +95,10 @@ const ProductList: React.FC = () => {
     };
 
     fetchProductsAndRestaurants();
+    const interval = setInterval(fetchProductsAndRestaurants, 1000);
+
+    return () => clearInterval(interval); // limpiar intervalo al desmontar
+    
   }, []);
 
   const truncateDescription = (description: string) => {
