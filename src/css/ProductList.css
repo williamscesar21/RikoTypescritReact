@@ -86,3 +86,9 @@
   font-size: 1.2rem;
   color: #FF7F00;
 }
+
+.closed-label {
+  text-align: center;
+  font-size: 0.8rem;
+  color: red;
+}

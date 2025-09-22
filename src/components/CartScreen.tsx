@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Minus, Plus, Trash2 } from 'react-feather';
 import '../css/CartScreen.css';
 import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from "../firebase"; // asegúrate que está importado
+import { db } from "../firebase";
 
 interface ProductDetails {
   _id: string;
@@ -34,11 +34,16 @@ interface PagoMovil {
   nombreBanco: string;
 }
 
+interface RestaurantMeta {
+  nombre: string;
+  ubicacion: string;
+  horario: { dia: string; inicio: string; fin: string }[];
+}
+
 function getDistanceKm(coord1: string, coord2: string): number {
   const [lat1, lon1] = coord1.split(',').map(Number);
   const [lat2, lon2] = coord2.split(',').map(Number);
-  const R = 6371; // km
-
+  const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
 
@@ -49,88 +54,99 @@ function getDistanceKm(coord1: string, coord2: string): number {
       Math.sin(dLon / 2) ** 2;
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
   return R * c;
 }
 
 const CartScreen: React.FC = () => {
   const [cart, setCart] = useState<Cart | null>(null);
-  const [restaurantNames, setRestaurantNames] = useState<Record<string, string>>({});
   const [restaurantCoords, setRestaurantCoords] = useState<Record<string, string>>({});
+  const [restaurantMeta, setRestaurantMeta] = useState<Record<string, RestaurantMeta>>({});
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [pagoMovilData, setPagoMovilData] = useState<PagoMovil | null>(null);
   const [currentRestaurantId, setCurrentRestaurantId] = useState<string | null>(null);
   const [currentItems, setCurrentItems] = useState<CartItem[]>([]);
+  const [isPaying, setIsPaying] = useState(false);
+
   const navigate = useNavigate();
   const clientId = localStorage.getItem('clientId');
   const userCoords = localStorage.getItem('userLocation');
-  const [isPaying, setIsPaying] = useState(false); // 👈 estado nuevo
 
   const handlePlaceOrder = async (restaurantId: string, items: CartItem[]) => {
     if (!clientId) return;
-
     try {
-      // Fetch restaurant Pago Móvil data
       const { data: restaurant } = await axios.get(
         `https://rikoapi.onrender.com/api/restaurant/restaurant/${restaurantId}`
       );
-      
+
       if (!restaurant.pagoMovil) {
-        alert('El restaurante no tiene datos de Pago Móvil configurados. Por favor, contacte al restaurante.');
+        alert('El restaurante no tiene datos de Pago Móvil configurados.');
         return;
       }
 
-      // Store the Pago Móvil data and show the modal
       setPagoMovilData(restaurant.pagoMovil);
       setCurrentRestaurantId(restaurantId);
       setCurrentItems(items);
       setShowModal(true);
     } catch (error: any) {
       console.error('Error al obtener datos de Pago Móvil:', error.response?.data || error.message);
-      alert('Error al obtener datos de Pago Móvil. Inténtelo de nuevo.');
     }
   };
 
-const confirmPayment = async () => {
-  if (!clientId || !userCoords || !currentRestaurantId || !currentItems) return;
+  
+  const isRestaurantOpen = (restaurantId: string): boolean => {
+    const rest = restaurantMeta[restaurantId];
+    if (!rest || !rest.horario) return false;
 
-  try {
-    setIsPaying(true); // 👈 bloquear el botón y mostrar "..."
-    const detalles = currentItems.map((item) => ({
-      id_producto: item.product,
-      cantidad: item.quantity,
-    }));
+    const now = new Date();
+    const day = now.toLocaleDateString('es-ES', { weekday: 'long' }).toLowerCase();
+    const currentTime = now.getHours() * 100 + now.getMinutes();
 
-    const subtotal = currentItems.reduce(
-      (acc, item) => acc + item.productDetails.precio * item.quantity,
-      0
-    );
+    const today = rest.horario.find((d) => d.dia.toLowerCase() === day);
+    if (today) {
+      const open = parseInt(today.inicio.replace(':', ''));
+      const close = parseInt(today.fin.replace(':', ''));
+      return currentTime >= open && currentTime <= close;
+    }
+    return false;
+  };
 
-    const factorCorrecionRuta = 1.30;
-    const deliveryFee =
-      userCoords && restaurantCoords[currentRestaurantId]
-        ? 1.5 + getDistanceKm(userCoords, restaurantCoords[currentRestaurantId]) * factorCorrecionRuta * 0.5
-        : subtotal * 0.1 + 1.5;
-    const total = subtotal + deliveryFee;
+  const confirmPayment = async () => {
+    if (!clientId || !userCoords || !currentRestaurantId || !currentItems) return;
+    try {
+      setIsPaying(true);
+      const detalles = currentItems.map((item) => ({
+        id_producto: item.product,
+        cantidad: item.quantity,
+      }));
 
-    const payload = {
-      id_cliente: clientId,
-      id_restaurant: currentRestaurantId,
-      direccion_de_entrega: userCoords,
-      detalles,
-      total,
-    };
+      const subtotal = currentItems.reduce(
+        (acc, item) => acc + item.productDetails.precio * item.quantity,
+        0
+      );
 
-    // Crear el pedido
-    const response = await axios.post('https://rikoapi.onrender.com/api/pedido/pedidos', payload);
+      const factorCorrecionRuta = 1.3;
+      const deliveryFee =
+        userCoords && restaurantCoords[currentRestaurantId]
+          ? 1.5 +
+            getDistanceKm(userCoords, restaurantCoords[currentRestaurantId]) *
+              factorCorrecionRuta *
+              0.5
+          : subtotal * 0.1 + 1.5;
+      const total = subtotal + deliveryFee;
 
-    const orderId = response.data.id
-      if (!orderId) {
-        throw new Error("El backend no devolvió un orderId válido");
-      }
+      const payload = {
+        id_cliente: clientId,
+        id_restaurant: currentRestaurantId,
+        direccion_de_entrega: userCoords,
+        detalles,
+        total,
+      };
 
-      // Crear sala de chat en Firestore
+      const response = await axios.post('https://rikoapi.onrender.com/api/pedido/pedidos', payload);
+      const orderId = response.data.id;
+      if (!orderId) throw new Error("El backend no devolvió un orderId válido");
+
       await setDoc(doc(db, "RikoChat", orderId), {
         orderId,
         clientId,
@@ -139,133 +155,130 @@ const confirmPayment = async () => {
         createdAt: serverTimestamp(),
       });
 
-      // Enviar mensaje inicial con link a Google Maps
+      const mapsUrl = `https://www.google.com/maps?q=${userCoords}`;
+      await addDoc(collection(db, "RikoChat", orderId, "messages"), {
+        senderId: clientId,
+        senderType: "client",
+        content: mapsUrl,
+        type: "location",
+        timestamp: serverTimestamp(),
+      });
 
-    const mapsUrl = `https://www.google.com/maps?q=${userCoords}`;
-
-    await addDoc(collection(db, "RikoChat", orderId, "messages"), {
-      senderId: clientId,
-      senderType: "client",
-      content: mapsUrl,   // 👈 Guarda SOLO el link
-      type: "location",
-      timestamp: serverTimestamp(),
-    });
-
-    // Eliminar productos del carrito uno por uno, solo para el restaurante actual
-    for (const item of currentItems) {
-      if (item.id_restaurant === currentRestaurantId) {
-        try {
+      for (const item of currentItems) {
+        if (item.id_restaurant === currentRestaurantId) {
           await axios.post('https://rikoapi.onrender.com/api/cart/cart/remove', {
             productId: item.product,
             clientId,
           });
-          console.log(`Producto ${item.product} eliminado del carrito.`);
-        } catch (error) {
-          console.error(`Error al eliminar producto ${item.product}:`, error);
-          // Opcional: Puedes decidir si continuar o detener el proceso aquí
-          // Por ejemplo, puedes lanzar el error para detener el proceso
-          // throw error;
         }
       }
-    }
 
-    // Actualizar el estado local del carrito
-    setCart((prev) =>
-      prev
-        ? {
-            ...prev,
-            items: prev.items.filter((item) => item.id_restaurant !== currentRestaurantId),
-          }
-        : prev
-    );
-
-    // Cerrar el modal y mostrar confirmación
-    setShowModal(false);
-    setPagoMovilData(null);
-    setCurrentRestaurantId(null);
-    setCurrentItems([]);
-    setIsPaying(false); // 👈 reactivar botón después de la respuesta
-    navigate(`/chat/${orderId}`);
-  } catch (error: any) {
-    console.error('Error al generar pedido:', error.response?.data || error.message);
-    alert('Error al generar el pedido');
-    setShowModal(false);
-  }
-};
-
-  useEffect(() => {
-    if (!clientId) {
-      console.error('Cliente no autenticado');
-      setLoading(false);
-      return;
-    }
-
-    const fetchCart = async () => {
-      try {
-        const { data: cartData } = await axios.get<Cart>(
-          `https://rikoapi.onrender.com/api/cart/cart/${clientId}`
-        );
-
-        const itemsWithDetails = await Promise.all(
-          cartData.items.map(async (item) => {
-            try {
-              const { data: product } = await axios.get(
-                `https://rikoapi.onrender.com/api/product/product/${item.product}`
-              );
-              return { ...item, productDetails: product };
-            } catch {
-              return {
-                ...item,
-                productDetails: {
-                  _id: '',
-                  nombre: 'Producto no disponible',
-                  precio: 0,
-                  images: [],
-                },
-              };
+      setCart((prev) =>
+        prev
+          ? {
+              ...prev,
+              items: prev.items.filter((item) => item.id_restaurant !== currentRestaurantId),
             }
-          })
-        );
+          : prev
+      );
 
-        setCart({ ...cartData, items: itemsWithDetails });
-        await fetchRestaurantMeta(itemsWithDetails);
-      } catch (error: any) {
-        console.error('Error al obtener el carrito:', error.response?.data || error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setShowModal(false);
+      setPagoMovilData(null);
+      setCurrentRestaurantId(null);
+      setCurrentItems([]);
+      setIsPaying(false);
+      navigate(`/chat/${orderId}`);
+    } catch (error: any) {
+      console.error('Error al generar pedido:', error.response?.data || error.message);
+      alert('Error al generar el pedido');
+      setShowModal(false);
+    }
+  };
 
-    const fetchRestaurantMeta = async (items: CartItem[]) => {
-      const uniqueIds = [...new Set(items.map((item) => item.id_restaurant))];
-      const names: Record<string, string> = {};
-      const coords: Record<string, string> = {};
+useEffect(() => {
+  if (!clientId) {
+    setLoading(false);
+    return;
+  }
 
-      await Promise.all(
-        uniqueIds.map(async (id) => {
+  const fetchCart = async () => {
+    try {
+      const { data: cartData } = await axios.get<Cart>(
+        `https://rikoapi.onrender.com/api/cart/cart/${clientId}`
+      );
+
+      const itemsWithDetails = await Promise.all(
+        cartData.items.map(async (item) => {
           try {
-            const { data } = await axios.get(
-              `https://rikoapi.onrender.com/api/restaurant/restaurant/${id}`
+            const { data: product } = await axios.get(
+              `https://rikoapi.onrender.com/api/product/product/${item.product}`
             );
-            names[id] = data.nombre || `Restaurante ${id.slice(-4)}`;
-            coords[id] = data.ubicacion || '';
+            return { ...item, productDetails: product };
           } catch {
-            names[id] = `Restaurante ${id.slice(-4)}`;
-            coords[id] = '';
+            return {
+              ...item,
+              productDetails: {
+                _id: '',
+                nombre: 'Producto no disponible',
+                precio: 0,
+                images: [],
+              },
+            };
           }
         })
       );
 
-      setRestaurantNames(names);
-      setRestaurantCoords(coords);
-    };
+      setCart({ ...cartData, items: itemsWithDetails });
+      await fetchRestaurantMeta(itemsWithDetails);
+    } catch (error: any) {
+      console.error('Error al obtener el carrito:', error.response?.data || error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchCart();
-  }, [clientId]);
+  const fetchRestaurantMeta = async (items: CartItem[]) => {
+    const uniqueIds = [...new Set(items.map((item) => item.id_restaurant))];
+    const meta: Record<string, RestaurantMeta> = {};
+    const coords: Record<string, string> = {};
+
+    await Promise.all(
+      uniqueIds.map(async (id) => {
+        try {
+          const { data } = await axios.get(
+            `https://rikoapi.onrender.com/api/restaurant/restaurant/${id}`
+          );
+          meta[id] = {
+            nombre: data.nombre || `Restaurante ${id.slice(-4)}`,
+            ubicacion: data.ubicacion || '',
+            horario: data.horario_de_trabajo || [],
+          };
+          coords[id] = data.ubicacion || '';
+        } catch {
+          meta[id] = {
+            nombre: `Restaurante ${id.slice(-4)}`,
+            ubicacion: '',
+            horario: [],
+          };
+          coords[id] = '';
+        }
+      })
+    );
+
+    setRestaurantMeta(meta);
+    setRestaurantCoords(coords);
+  };
+
+  // 🚀 Ejecutar cada 1s
+  fetchCart(); // primera ejecución inmediata
+  const intervalId = setInterval(fetchCart, 1000);
+
+  return () => clearInterval(intervalId); // limpiar al desmontar
+}, [clientId]);
+
 
   const handleAddToCart = async (item: CartItem, quantityChange: number) => {
     if (!clientId) return;
-
     try {
       await axios.post('https://rikoapi.onrender.com/api/cart/add', {
         productId: item.product,
@@ -295,13 +308,11 @@ const confirmPayment = async () => {
 
   const handleRemove = async (item: CartItem) => {
     if (!clientId) return;
-
     try {
       await axios.post('https://rikoapi.onrender.com/api/cart/cart/remove', {
         productId: item.product,
         clientId,
       });
-
       setCart((prev) =>
         prev
           ? {
@@ -361,14 +372,17 @@ const confirmPayment = async () => {
         const factorCorrecionRuta = 0.8;
         const deliveryFee =
           userCoords && restaurantCoords[restaurantId]
-            ? 0.8 + getDistanceKm(userCoords, restaurantCoords[restaurantId]) * factorCorrecionRuta * 0.5
+            ? 0.8 +
+              getDistanceKm(userCoords, restaurantCoords[restaurantId]) *
+                factorCorrecionRuta *
+                0.5
             : subtotal * 0.05 + 1.5;
         const total = subtotal + deliveryFee;
 
         return (
           <div key={restaurantId} className="restaurant-cart-section">
             <h2 className="restaurant-title-cart">
-              {restaurantNames[restaurantId] || `Restaurante ${restaurantId.slice(-4)}`}
+              {restaurantMeta[restaurantId]?.nombre || `Restaurante ${restaurantId.slice(-4)}`}
             </h2>
 
             <div className="items-list">
@@ -381,9 +395,11 @@ const confirmPayment = async () => {
                       className="item-image"
                     />
                   </div>
-
                   <div className="item-center">
-                    <div className="item-name" onClick={() => navigate(`/product/${item.product}`)}>
+                    <div
+                      className="item-name"
+                      onClick={() => navigate(`/product/${item.product}`)}
+                    >
                       {item.productDetails.nombre}
                     </div>
                     <div className="item-details">
@@ -393,7 +409,6 @@ const confirmPayment = async () => {
                       </span>
                     </div>
                   </div>
-
                   <div className="item-right">
                     <span onClick={() => handleAddToCart(item, -1)} className="circle-button-cart">
                       <Minus size={16} />
@@ -422,13 +437,20 @@ const confirmPayment = async () => {
                 <span>Total</span>
                 <span>${total.toFixed(2)}</span>
               </div>
-              <button
-                onClick={() => handlePlaceOrder(restaurantId, items)}
-                className="place-order-button"
-                disabled={items.length === 0}
-              >
-                PAGAR
-              </button>
+
+              {!isRestaurantOpen(restaurantId) ? (
+                <span className="closed-label" style={{ textAlign: 'center', marginTop: '10px' }}>
+                  Restaurante Cerrado
+                </span>
+              ) : (
+                <button
+                  onClick={() => handlePlaceOrder(restaurantId, items)}
+                  className="place-order-button"
+                  disabled={items.length === 0}
+                >
+                  PAGAR
+                </button>
+              )}
             </div>
           </div>
         );
@@ -444,23 +466,29 @@ const confirmPayment = async () => {
                 <p><strong>Documento:</strong> {pagoMovilData.cedula}</p>
                 <p><strong>Banco:</strong> {pagoMovilData.nombreBanco} ({pagoMovilData.banco})</p>
                 <p>
-                  <strong>Total a pagar:</strong> $
-                  {(() => {
+                  <strong>Total a pagar:</strong> {(() => {
                     const totalUSD =
-                     (
-                    currentItems.reduce((acc, item) => acc + item.productDetails.precio * item.quantity, 0) +
-                    (userCoords && currentRestaurantId && restaurantCoords[currentRestaurantId]
-                      ? 0.8 + getDistanceKm(userCoords, restaurantCoords[currentRestaurantId]) * 0.8 * 0.5
-                      : currentItems.reduce((acc, item) => acc + item.productDetails.precio * item.quantity, 0) * 0.05 + 1.5)
-                  )
+                      currentItems.reduce(
+                        (acc, item) => acc + item.productDetails.precio * item.quantity,
+                        0
+                      ) +
+                      (userCoords && currentRestaurantId && restaurantCoords[currentRestaurantId]
+                        ? 0.8 +
+                          getDistanceKm(userCoords, restaurantCoords[currentRestaurantId]) *
+                            0.8 *
+                            0.5
+                        : currentItems.reduce(
+                            (acc, item) => acc + item.productDetails.precio * item.quantity,
+                            0
+                          ) *
+                            0.05 +
+                          1.5);
 
                     const dolarEnBs = parseFloat(localStorage.getItem("dolarenbs") || "0");
                     const totalBs = dolarEnBs ? (totalUSD * dolarEnBs).toFixed(2) : "N/A";
-
-                    return `${totalUSD.toFixed(2)} | ${totalBs} Bs`;
+                    return `$${totalUSD.toFixed(2)} | ${totalBs} Bs`;
                   })()}
                 </p>
-
               </div>
             ) : (
               <p>No se encontraron datos de Pago Móvil.</p>
@@ -474,16 +502,16 @@ const confirmPayment = async () => {
                   setCurrentRestaurantId(null);
                   setCurrentItems([]);
                 }}
-                disabled={isPaying} // 👈 deshabilitar cancelar mientras procesa
+                disabled={isPaying}
               >
                 Cancelar
               </button>
               <button
                 className="modal-confirm-button"
                 onClick={confirmPayment}
-                disabled={!pagoMovilData || isPaying} // 👈 deshabilitar confirmar si no hay datos o mientras procesa
+                disabled={!pagoMovilData || isPaying}
               >
-                {isPaying ? "..." : "Ya Pagué"} {/* 👈 mostrar ... mientras procesa */}
+                {isPaying ? "..." : "Ya Pagué"}
               </button>
             </div>
           </div>

@@ -18,6 +18,7 @@ interface Product {
 interface Restaurant {
   _id: string;
   suspendido?: boolean;
+  horario_de_trabajo: { dia: string; inicio: string; fin: string }[];
 }
 
 const ITEMS_PER_PAGE = 5;
@@ -28,6 +29,7 @@ const ProductList: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [restaurantOpenMap, setRestaurantOpenMap] = useState<Record<string, boolean>>({});
 
   const navigate = useNavigate();
 
@@ -40,9 +42,7 @@ const ProductList: React.FC = () => {
         );
 
         // 2. Obtener IDs únicos de restaurantes
-        const uniqueRestaurantIds = [
-          ...new Set(allProducts.map((p) => p.id_restaurant)),
-        ];
+        const uniqueRestaurantIds = [...new Set(allProducts.map((p) => p.id_restaurant))];
 
         // 3. Traer datos de cada restaurante
         const restaurantsData = await Promise.all(
@@ -51,21 +51,43 @@ const ProductList: React.FC = () => {
               const { data } = await axios.get<Restaurant>(
                 `https://rikoapi.onrender.com/api/restaurant/restaurant/${id}`
               );
-              return { id, suspendido: data.suspendido };
+
+              // Validar si está abierto
+              let isOpen = false;
+              if (data.horario_de_trabajo) {
+                const now = new Date();
+                const day = now.toLocaleDateString('es-ES', { weekday: 'long' }).toLowerCase();
+                const currentTime = now.getHours() * 100 + now.getMinutes();
+
+                const today = data.horario_de_trabajo.find(
+                  (d) => d.dia.toLowerCase() === day
+                );
+                if (today) {
+                  const open = parseInt(today.inicio.replace(':', ''));
+                  const close = parseInt(today.fin.replace(':', ''));
+                  isOpen = currentTime >= open && currentTime <= close;
+                }
+              }
+
+              return { id, suspendido: data.suspendido ?? false, abierto: isOpen };
             } catch (error) {
               console.error(`Error obteniendo restaurante ${id}`, error);
-              return { id, suspendido: true }; // Si falla, lo marcamos suspendido
+              return { id, suspendido: true, abierto: false };
             }
           })
         );
 
-        // 4. Crear un mapa {id_restaurant: suspendido}
+        // 4. Crear mapas
         const restaurantMap: Record<string, boolean> = {};
+        const openMap: Record<string, boolean> = {};
         restaurantsData.forEach((r) => {
-          restaurantMap[r.id] = r.suspendido ?? false;
+          restaurantMap[r.id] = r.suspendido;
+          openMap[r.id] = r.abierto;
         });
 
-        // 5. Filtrar productos
+        setRestaurantOpenMap(openMap);
+
+        // 5. Filtrar productos válidos
         const filteredProducts = allProducts.filter(
           (p) =>
             (p.suspendido === false || p.suspendido === undefined) &&
@@ -111,61 +133,45 @@ const ProductList: React.FC = () => {
   return (
     <>
       <div className="product-list animate-slide-in">
-        {paginatedProducts.map((item) => (
-          <div
-            key={item._id}
-            className="product-card"
-            onClick={() => goToProductScreen(item._id)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') goToProductScreen(item._id);
-            }}
-            style={{ cursor: 'pointer' }}
-          >
-            <img
-              src={item.images[0]}
-              alt={item.nombre}
-              className="product-image"
-            />
-            <div className="product-info">
-              <h3 className="product-title">{item.nombre}</h3>
-              <p className="product-desc">
-                {truncateDescription(item.descripcion)}
-              </p>
-              <div
-                className="price-button-container"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <span className="product-price">${item.precio.toFixed(2)}</span>
-                <BotonAgregar onAgregar={() => openModal(item)} />
+        {paginatedProducts.map((item) => {
+          const isOpen = restaurantOpenMap[item.id_restaurant];
+
+          return (
+            <div
+              key={item._id}
+              className="product-card"
+              onClick={() => goToProductScreen(item._id)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') goToProductScreen(item._id);
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              <img
+                src={item.images[0]}
+                alt={item.nombre}
+                className="product-image"
+              />
+              <div className="product-info">
+                <h3 className="product-title">{item.nombre}</h3>
+                <p className="product-desc">{truncateDescription(item.descripcion)}</p>
+                <div
+                  className="price-button-container"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span className="product-price">${item.precio.toFixed(2)}</span>
+                  {isOpen ? (
+                    <BotonAgregar onAgregar={() => openModal(item)} />
+                  ) : (
+                    <span className="closed-label">Cerrado</span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-
-      {products.length > ITEMS_PER_PAGE && (
-        <div className="pagination-controls">
-          <button
-            style={{ display: 'none' }}
-            onClick={goToPrevious}
-            disabled={currentPage === 1}
-          >
-            Anterior
-          </button>
-          <span style={{ display: 'none' }}>
-            Página {currentPage} de {totalPages}
-          </span>
-          <button
-            style={{ display: 'none' }}
-            onClick={goToNext}
-            disabled={currentPage === totalPages}
-          >
-            Siguiente
-          </button>
-        </div>
-      )}
 
       {selectedProduct && (
         <ModalAgregarProducto

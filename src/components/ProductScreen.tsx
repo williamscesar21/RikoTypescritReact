@@ -25,6 +25,7 @@ interface Product {
 interface Restaurant {
   _id: string;
   nombre: string;
+  horario_de_trabajo: { dia: string; inicio: string; fin: string }[];
 }
 
 const ProductScreen: React.FC = () => {
@@ -79,6 +80,23 @@ const ProductScreen: React.FC = () => {
     setModalOpen(true);
   };
 
+  const isRestaurantOpen = (): boolean => {
+    if (!restaurant || !restaurant.horario_de_trabajo) return false;
+    const now = new Date();
+    const day = now.toLocaleDateString('es-ES', { weekday: 'long' }).toLowerCase();
+    const currentTime = now.getHours() * 100 + now.getMinutes();
+
+    const today = restaurant.horario_de_trabajo.find(
+      (d) => d.dia.toLowerCase() === day
+    );
+    if (today) {
+      const open = parseInt(today.inicio.replace(':', ''));
+      const close = parseInt(today.fin.replace(':', ''));
+      return currentTime >= open && currentTime <= close;
+    }
+    return false;
+  };
+
   if (loading) {
     return (
       <div className="loading-screen">
@@ -120,7 +138,15 @@ const ProductScreen: React.FC = () => {
           </div>
 
           <h1 className="product-name">{product.nombre}</h1>
-          {restaurant && <h4 onClick={() => navigate(`/restaurant/${restaurant._id}`)} className="restaurant-name" style={{ color: 'gray', textAlign: 'center', margin: '0px' }}>{restaurant.nombre}</h4>}
+          {restaurant && (
+            <h4
+              onClick={() => navigate(`/restaurant/${restaurant._id}`)}
+              className="restaurant-name"
+              style={{ color: 'gray', textAlign: 'center', margin: '0px', cursor: 'pointer' }}
+            >
+              {restaurant.nombre}
+            </h4>
+          )}
 
           {product.calificacion && (
             <div className="product-rating">
@@ -137,7 +163,11 @@ const ProductScreen: React.FC = () => {
 
           <div className="price-and-counter">
             <span className="price">${product.precio.toFixed(2)}</span>
-            <BotonAgregar onAgregar={() => openModal(product)} />
+            {isRestaurantOpen() ? (
+              <BotonAgregar onAgregar={() => openModal(product)} />
+            ) : (
+              <span className="closed-label">Cerrado</span>
+            )}
           </div>
 
           {product.tags?.length > 0 && (

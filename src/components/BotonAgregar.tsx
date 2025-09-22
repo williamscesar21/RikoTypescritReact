@@ -1,4 +1,3 @@
-// src/components/BotonAgregar.tsx
 import React from 'react';
 
 interface BotonAgregarProps {
@@ -13,7 +12,7 @@ const BotonAgregar: React.FC<BotonAgregarProps> = ({
   className = 'add-button',
 }) => {
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation(); // evita que el click propague y active la navegación
+    e.stopPropagation();
     onAgregar();
   };
 
