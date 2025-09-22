@@ -76,7 +76,9 @@ const DishRow: React.FC<DishRowProps> = ({ item }) => {
       }
     };
 
-    fetchRestaurant();
+    const interval = setInterval(fetchRestaurant, 1000);
+
+    return () => clearInterval(interval); // limpiar intervalo al desmontar
   }, [item.id_restaurant]);
 
   return (
