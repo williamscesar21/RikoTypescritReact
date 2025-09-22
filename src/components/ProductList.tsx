@@ -21,14 +21,11 @@ interface Restaurant {
   horario_de_trabajo: { dia: string; inicio: string; fin: string }[];
 }
 
-const ITEMS_PER_PAGE = 5;
-
 const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [restaurantOpenMap, setRestaurantOpenMap] = useState<Record<string, boolean>>({});
 
   const navigate = useNavigate();
@@ -36,15 +33,12 @@ const ProductList: React.FC = () => {
   useEffect(() => {
     const fetchProductsAndRestaurants = async () => {
       try {
-        // 1. Traer todos los productos
         const { data: allProducts } = await axios.get<Product[]>(
           'https://rikoapi.onrender.com/api/product/product'
         );
 
-        // 2. Obtener IDs únicos de restaurantes
         const uniqueRestaurantIds = [...new Set(allProducts.map((p) => p.id_restaurant))];
 
-        // 3. Traer datos de cada restaurante
         const restaurantsData = await Promise.all(
           uniqueRestaurantIds.map(async (id) => {
             try {
@@ -52,7 +46,6 @@ const ProductList: React.FC = () => {
                 `https://rikoapi.onrender.com/api/restaurant/restaurant/${id}`
               );
 
-              // Validar si está abierto
               let isOpen = false;
               if (data.horario_de_trabajo) {
                 const now = new Date();
@@ -77,7 +70,6 @@ const ProductList: React.FC = () => {
           })
         );
 
-        // 4. Crear mapas
         const restaurantMap: Record<string, boolean> = {};
         const openMap: Record<string, boolean> = {};
         restaurantsData.forEach((r) => {
@@ -87,14 +79,14 @@ const ProductList: React.FC = () => {
 
         setRestaurantOpenMap(openMap);
 
-        // 5. Filtrar productos válidos
         const filteredProducts = allProducts.filter(
           (p) =>
             (p.suspendido === false || p.suspendido === undefined) &&
             restaurantMap[p.id_restaurant] === false
         );
 
-        setProducts(filteredProducts);
+        // 👉 tomar solo los primeros 10 (los "mejores" según orden recibido)
+        setProducts(filteredProducts.slice(0, 10));
       } catch (error) {
         console.error('Error fetching products or restaurants:', error);
       } finally {
@@ -119,21 +111,12 @@ const ProductList: React.FC = () => {
     setModalOpen(true);
   };
 
-  const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
-  const paginatedProducts = products.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  const goToPrevious = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
-  const goToNext = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-
   if (loading) return <div className="loading">Cargando productos...</div>;
 
   return (
     <>
       <div className="product-list animate-slide-in">
-        {paginatedProducts.map((item) => {
+        {products.map((item) => {
           const isOpen = restaurantOpenMap[item.id_restaurant];
 
           return (

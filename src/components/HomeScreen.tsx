@@ -148,7 +148,27 @@ const HomeScreen: React.FC = () => {
       {/* Productos populares */}
       {!searchTerm && (
         <div style={{ animationDelay: '0.5s' }}>
-          <h2 className="section-title-main">Productos populares</h2>
+          <div className='animate-slide-in' style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 className="section-title-main">Productos populares</h2>
+            <button
+              onClick={() => navigate('/productos')}
+              className="ver-mas-button"
+              style={{
+                backgroundColor: '#FF7F00',
+                color: 'white',
+                border: 'none',
+                padding: '2px 10px',
+                cursor: 'pointer',
+                fontWeight: 'light',
+                fontSize: '0.7rem',
+                margin: '0',
+              }}
+            >
+              Ver más
+            </button>
+          </div>
+          
+          
           <ProductList />
         </div>
       )}
