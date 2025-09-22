@@ -229,3 +229,11 @@
   color: #555;
   font-style: italic;
 }
+
+.file-input{
+  display: none;
+}
+
+h6{
+  color: '#FF7F00'
+}

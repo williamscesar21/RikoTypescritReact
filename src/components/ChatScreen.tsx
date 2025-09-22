@@ -107,7 +107,7 @@ const ChatScreen: React.FC = () => {
       {/* HEADER */}
       <div className="chat-header">
         <h2>Pedido</h2>
-        <h6 style={{ color: '#FF7F00' }}> #{orderId}</h6>
+        <h6> #{orderId}</h6>
       </div>
 
 {/* MENSAJES */}
@@ -165,7 +165,7 @@ const ChatScreen: React.FC = () => {
             type="file"
             id="file-upload"
             accept="image/*"
-            style={{ display: "none" }}
+            className='file-input'
             onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
 
