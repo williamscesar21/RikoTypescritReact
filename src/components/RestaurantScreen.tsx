@@ -42,35 +42,48 @@ const RestaurantScreen: React.FC = () => {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (id) {
-      // 🔹 Traer datos del restaurante
-      axios
-        .get(`https://rikoapi.onrender.com/api/restaurant/restaurant/${id}`)
-        .then((response) => setRestaurant(response.data))
-        .catch((error) =>
-          console.error('Error fetching restaurant data:', error)
+useEffect(() => {
+  if (!id) return;
+
+  const fetchData = () => {
+    // 🔹 Traer datos del restaurante
+    axios
+      .get(`https://rikoapi.onrender.com/api/restaurant/restaurant/${id}`)
+      .then((response) => setRestaurant(response.data))
+      .catch((error) =>
+        console.error('Error fetching restaurant data:', error)
+      );
+
+    // 🔹 Traer productos y filtrar suspendidos
+    axios
+      .get('https://rikoapi.onrender.com/api/product/product')
+      .then((response) => {
+        const filtered = response.data.filter(
+          (p: Product) =>
+            p.id_restaurant === id &&
+            (p.suspendido === false || p.suspendido === undefined)
         );
+        setProducts(filtered);
 
-      // 🔹 Traer productos y filtrar suspendidos
-      axios
-        .get('https://rikoapi.onrender.com/api/product/product')
-        .then((response) => {
-          const filtered = response.data.filter(
-            (p: Product) =>
-              p.id_restaurant === id && (p.suspendido === false || p.suspendido === undefined)
-          );
-          setProducts(filtered);
+        // Extraer y normalizar tags únicos
+        const allTags: string[] = Array.from(
+          new Set(filtered.flatMap((p: Product) => p.tags || []))
+        );
+        setTags(allTags);
+      })
+      .catch((error) => console.error('Error fetching products:', error));
+  };
 
-          // Extraer y normalizar tags únicos
-          const allTags: string[] = Array.from(
-            new Set(filtered.flatMap((p: Product) => p.tags || []))
-          );
-          setTags(allTags);
-        })
-        .catch((error) => console.error('Error fetching products:', error));
-    }
-  }, [id]);
+  // Primera ejecución inmediata
+  fetchData();
+
+  // Intervalo cada 1 segundo
+  const interval = setInterval(fetchData, 1000);
+
+  // Limpiar intervalo al desmontar
+  return () => clearInterval(interval);
+}, [id]);
+
 
   const isRestaurantOpen = () => {
     if (!restaurant || !restaurant.horario_de_trabajo) return false;
