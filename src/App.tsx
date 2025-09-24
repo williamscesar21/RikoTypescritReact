@@ -18,10 +18,33 @@ import ForgotPassword from './components/ForgotPassword';
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Device } from "@capacitor/device";
 import ProductsScreen from './components/ProductsScreen';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 const App: React.FC = () => {
   const token = localStorage.getItem('token');
 
+  // ✅ Pedir permisos al inicio
+  useEffect(() => {
+    const requestPermissions = async () => {
+      try {
+        // 📍 Ubicación
+        const geoPerms = await Geolocation.requestPermissions();
+        console.log("📍 Permisos de ubicación:", geoPerms);
+
+        // 🔔 Notificaciones (solo móvil, no web)
+        if (Capacitor.getPlatform() !== "web") {
+          const notifPerms = await LocalNotifications.requestPermissions();
+          console.log("🔔 Permisos de notificaciones:", notifPerms);
+        }
+      } catch (e) {
+        console.error("❌ Error solicitando permisos:", e);
+      }
+    };
+
+    requestPermissions();
+  }, []);
+
+  // ✅ Ajuste de safe area en Android
   useEffect(() => {
     const fixSafeArea = async () => {
       if (Capacitor.getPlatform() === "android") {
@@ -29,10 +52,9 @@ const App: React.FC = () => {
           const info = await Device.getInfo();
           console.log("📱 Device info:", info);
 
-          // 👉 Ajuste manual: deja espacio extra de 16-24px (altura típica de la barra)
           const main = document.querySelector(".main-content") as HTMLElement;
           if (main) {
-            main.style.paddingBottom = "24px"; // puedes probar 16px, 20px o 24px
+            main.style.paddingBottom = "24px";
           }
         } catch (e) {
           console.error("❌ Error ajustando safe area:", e);
@@ -42,30 +64,46 @@ const App: React.FC = () => {
     fixSafeArea();
   }, []);
 
-// 🛰️ Efecto para rastreo de ubicación continuo
-useEffect(() => {
-  let watchIdCapacitor: string | null = null;
-  let watchIdWeb: number | null = null;
+  // 🛰️ Efecto para rastreo de ubicación continuo
+  useEffect(() => {
+    let watchIdCapacitor: string | null = null;
+    let watchIdWeb: number | null = null;
 
-  const startTracking = async () => {
-    try {
-      if (Capacitor.getPlatform() !== "web") {
-        // 📱 Capacitor (Android/iOS)
-        const permission = await Geolocation.requestPermissions();
-        if (permission.location === "granted") {
-          watchIdCapacitor = await Geolocation.watchPosition(
-            {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 0,
-            },
-            (position, err) => {
-              if (err) {
-                console.error("❌ Error tracking (Capacitor):", err);
-                return;
+    const startTracking = async () => {
+      try {
+        if (Capacitor.getPlatform() !== "web") {
+          const permission = await Geolocation.checkPermissions();
+          if (permission.location === "granted") {
+            watchIdCapacitor = await Geolocation.watchPosition(
+              {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0,
+              },
+              (position, err) => {
+                if (err) {
+                  console.error("❌ Error tracking (Capacitor):", err);
+                  return;
+                }
+
+                if (position?.coords) {
+                  const coords = `${position.coords.latitude},${position.coords.longitude}`;
+                  const accuracy = position.coords.accuracy || null;
+
+                  localStorage.setItem("userLocation", coords);
+                  if (accuracy) {
+                    localStorage.setItem("userAccuracy", accuracy.toString());
+                  }
+
+                  console.log("📡 Ubicación actual (Capacitor):", coords, "| Precisión:", accuracy, "m");
+                }
               }
-
-              if (position?.coords) {
+            );
+          }
+        } else {
+          if ("geolocation" in navigator) {
+            watchIdWeb = navigator.geolocation.watchPosition(
+              (position) => {
                 const coords = `${position.coords.latitude},${position.coords.longitude}`;
                 const accuracy = position.coords.accuracy || null;
 
@@ -74,72 +112,40 @@ useEffect(() => {
                   localStorage.setItem("userAccuracy", accuracy.toString());
                 }
 
-                console.log(
-                  "📡 Ubicación actual (Capacitor):",
-                  coords,
-                  "| Precisión:",
-                  accuracy,
-                  "m"
-                );
+                console.log("📡 Ubicación actual (Web):", coords, "| Precisión:", accuracy, "m");
+              },
+              (error) => {
+                console.error("❌ Error tracking (Web):", error);
+              },
+              {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0,
               }
-            }
-          );
+            );
+          }
+        }
+      } catch (error) {
+        console.error("❌ Error general al iniciar el tracking de ubicación:", error);
+      }
+    };
+
+    if (token) startTracking();
+
+    return () => {
+      if (Capacitor.getPlatform() !== "web") {
+        if (watchIdCapacitor) {
+          Geolocation.clearWatch({ id: watchIdCapacitor });
         }
       } else {
-        // 💻 Web (navigator.geolocation)
-        if ("geolocation" in navigator) {
-          watchIdWeb = navigator.geolocation.watchPosition(
-            (position) => {
-              const coords = `${position.coords.latitude},${position.coords.longitude}`;
-              const accuracy = position.coords.accuracy || null;
-
-              localStorage.setItem("userLocation", coords);
-              if (accuracy) {
-                localStorage.setItem("userAccuracy", accuracy.toString());
-              }
-
-              console.log(
-                "📡 Ubicación actual (Web):",
-                coords,
-                "| Precisión:",
-                accuracy,
-                "m"
-              );
-            },
-            (error) => {
-              console.error("❌ Error tracking (Web):", error);
-            },
-            {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 0,
-            }
-          );
+        if (watchIdWeb !== null && navigator.geolocation.clearWatch) {
+          navigator.geolocation.clearWatch(watchIdWeb);
         }
       }
-    } catch (error) {
-      console.error("❌ Error general al iniciar el tracking de ubicación:", error);
-    }
-  };
+    };
+  }, [token]);
 
-  if (token) startTracking();
-
-  return () => {
-    if (Capacitor.getPlatform() !== "web") {
-      if (watchIdCapacitor) {
-        Geolocation.clearWatch({ id: watchIdCapacitor });
-      }
-    } else {
-      if (watchIdWeb !== null && navigator.geolocation.clearWatch) {
-        navigator.geolocation.clearWatch(watchIdWeb);
-      }
-    }
-  };
-}, [token]);
-
-
-
-  // 💵 Efecto para obtener el dólar oficial y guardarlo en localStorage
+  // 💵 Dólar oficial
   useEffect(() => {
     const fetchDollar = async () => {
       try {
@@ -159,15 +165,14 @@ useEffect(() => {
   }, []);
 
   useEffect(() => {
-  const adjustSafeArea = async () => {
-    if (Capacitor.getPlatform() === "android") {
-      // Opcional: poner la barra transparente
-      await StatusBar.setBackgroundColor({ color: "#000000" });
-      await StatusBar.setStyle({ style: Style.Light });
-    }
-  };
-  adjustSafeArea();
-}, []);
+    const adjustSafeArea = async () => {
+      if (Capacitor.getPlatform() === "android") {
+        await StatusBar.setBackgroundColor({ color: "#000000" });
+        await StatusBar.setStyle({ style: Style.Light });
+      }
+    };
+    adjustSafeArea();
+  }, []);
 
   return (
     <BrowserRouter>
@@ -186,7 +191,7 @@ useEffect(() => {
               <Route path="/productos" element={<ProductsScreen />} />
               <Route path="/pedidos" element={<PedidosScreen />} />
               <Route path="/pedido/:id" element={<PedidoDetailsScreen />} />
-              <Route path="/chat/:orderId" element={<ChatScreen />} /> {/* New route */}
+              <Route path="/chat/:orderId" element={<ChatScreen />} />
               <Route path="*" element={<Navigate to="/home" />} />
             </Routes>
           </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   collection,
   query,
@@ -11,9 +11,9 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from '../firebase';
 import '../css/ChatScreen.css';
-import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'react-feather';
 import { CiImageOn } from 'react-icons/ci';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 interface Message {
   id: string;
@@ -34,7 +34,7 @@ const ChatScreen: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // ✅ Función para formatear el tiempo en "Justo ahora", "hace 1m", etc.
+  // ✅ Función para formatear el tiempo
   const formatTime = (timestamp: any) => {
     if (!timestamp) return '';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -48,7 +48,6 @@ const ChatScreen: React.FC = () => {
     if (diffMin < 60) return `Hace ${diffMin} min`;
     if (diffHrs < 24) return `Hace ${diffHrs} h`;
 
-    // Mostrar formato DD-MM-YYYY hh:mm a
     return date.toLocaleString('es-VE', {
       day: '2-digit',
       month: '2-digit',
@@ -59,12 +58,42 @@ const ChatScreen: React.FC = () => {
     });
   };
 
-  // Verificar usuario autenticado
+  // 🔔 Función de notificación
+  const triggerNotification = async (msg: Message) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      // Web
+      new Notification("Nuevo mensaje 📩", {
+        body: msg.type === 'text' ? msg.content : "Te enviaron un archivo",
+        icon: "/logoNaranja.png",
+      });
+    } else {
+      // Capacitor (Android/iOS)
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Nuevo mensaje 📩",
+            body: msg.type === 'text' ? msg.content : "Te enviaron un archivo",
+            id: Date.now(),
+            schedule: { at: new Date(Date.now() + 100) },
+            sound: "default",
+          },
+        ],
+      });
+    }
+  };
+
+  // ✅ Pedir permisos de notificaciones
   useEffect(() => {
-    console.log('Current Firebase user:', auth.currentUser);
+    const requestPerms = async () => {
+      if ('Notification' in window && Notification.permission !== 'granted') {
+        await Notification.requestPermission();
+      }
+      await LocalNotifications.requestPermissions();
+    };
+    requestPerms();
   }, []);
 
-  // Cargar mensajes en tiempo real
+  // 🔄 Escuchar mensajes en tiempo real
   useEffect(() => {
     if (!orderId) return;
 
@@ -78,14 +107,23 @@ const ChatScreen: React.FC = () => {
         id: doc.id,
         ...doc.data(),
       })) as Message[];
+
+      // Detectar si llegó un nuevo mensaje
+      if (messages.length && fetchedMessages.length > messages.length) {
+        const newMsg = fetchedMessages[fetchedMessages.length - 1];
+        if (newMsg.senderId !== auth.currentUser?.uid) {
+          triggerNotification(newMsg);
+        }
+      }
+
       setMessages(fetchedMessages);
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     });
 
     return () => unsubscribe();
-  }, [orderId]);
+  }, [orderId, messages]);
 
-  // Enviar mensaje de texto
+  // ➡️ Enviar mensaje de texto
   const sendMessage = async () => {
     if (!newMessage.trim() || !auth.currentUser) return;
     try {
@@ -102,7 +140,7 @@ const ChatScreen: React.FC = () => {
     }
   };
 
-  // Subir comprobante de pago
+  // 📎 Subir comprobante de pago
   const handleFileUpload = async () => {
     if (!file || !auth.currentUser) return;
     try {
@@ -160,7 +198,7 @@ const ChatScreen: React.FC = () => {
                 </div>
               )}
             </div>
-            {/* Hora FUERA de la burbuja */}
+            {/* Hora fuera de la burbuja */}
             <span
               className={`message-time ${
                 msg.senderType === 'client' ? 'time-sent' : 'time-received'
