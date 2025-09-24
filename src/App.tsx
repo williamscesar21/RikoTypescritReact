@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import LoginScreen from './components/LoginScreen';
 import HomeScreen from './components/HomeScreen';
 import Navbar from './components/Navbar';
@@ -20,24 +20,29 @@ import { Device } from "@capacitor/device";
 import ProductsScreen from './components/ProductsScreen';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
-const App: React.FC = () => {
-  const token = localStorage.getItem('token');
+const AppContent: React.FC<{ token: string | null }> = ({ token }) => {
+  const location = useLocation();
 
   // ✅ Pedir permisos al inicio
   useEffect(() => {
     const requestPermissions = async () => {
       try {
-        // 📍 Ubicación
-        const geoPerms = await Geolocation.requestPermissions();
-        console.log("📍 Permisos de ubicación:", geoPerms);
-
-        // 🔔 Notificaciones (solo móvil, no web)
-        if (Capacitor.getPlatform() !== "web") {
-          const notifPerms = await LocalNotifications.requestPermissions();
-          console.log("🔔 Permisos de notificaciones:", notifPerms);
+        if (Capacitor.getPlatform() === "web") {
+          if ("Notification" in window && Notification.permission !== "granted") {
+            await Notification.requestPermission();
+          }
+          if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => console.log("📍 Ubicación web:", pos.coords),
+              (err) => console.error("❌ Error ubicación web:", err)
+            );
+          }
+        } else {
+          await Geolocation.requestPermissions();
+          await LocalNotifications.requestPermissions();
         }
-      } catch (e) {
-        console.error("❌ Error solicitando permisos:", e);
+      } catch (err) {
+        console.error("❌ Error solicitando permisos:", err);
       }
     };
 
@@ -64,7 +69,7 @@ const App: React.FC = () => {
     fixSafeArea();
   }, []);
 
-  // 🛰️ Efecto para rastreo de ubicación continuo
+  // 🛰️ Rastreo de ubicación continuo
   useEffect(() => {
     let watchIdCapacitor: string | null = null;
     let watchIdWeb: number | null = null;
@@ -174,35 +179,43 @@ const App: React.FC = () => {
     adjustSafeArea();
   }, []);
 
+  // 🔍 Ocultar navbar en ChatScreen
+  const hideNavbar = location.pathname.startsWith("/chat/");
+
+  return token ? (
+    <div className="app-container">
+      {!hideNavbar && <Navbar />}
+      <div className="main-content">
+        <Routes>
+          <Route path="/" element={<Navigate to="/home" />} />
+          <Route path="/home" element={<HomeScreen />} />
+          <Route path="/restaurant/:id" element={<RestaurantScreen />} />
+          <Route path="/client/:id" element={<ClientScreen />} />
+          <Route path="/product/:id" element={<ProductScreen />} />
+          <Route path="/bolsita" element={<CartScreen />} />
+          <Route path="/restaurants" element={<RestaurantsSection />} />
+          <Route path="/productos" element={<ProductsScreen />} />
+          <Route path="/pedidos" element={<PedidosScreen />} />
+          <Route path="/pedido/:id" element={<PedidoDetailsScreen />} />
+          <Route path="/chat/:orderId" element={<ChatScreen />} />
+          <Route path="*" element={<Navigate to="/home" />} />
+        </Routes>
+      </div>
+    </div>
+  ) : (
+    <Routes>
+      <Route path="/" element={<LoginScreen />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
+  );
+};
+
+const App: React.FC = () => {
+  const token = localStorage.getItem("token");
   return (
     <BrowserRouter>
-      {token ? (
-        <div className="app-container">
-          <Navbar />
-          <div className="main-content">
-            <Routes>
-              <Route path="/" element={<Navigate to="/home" />} />
-              <Route path="/home" element={<HomeScreen />} />
-              <Route path="/restaurant/:id" element={<RestaurantScreen />} />
-              <Route path="/client/:id" element={<ClientScreen />} />
-              <Route path="/product/:id" element={<ProductScreen />} />
-              <Route path="/bolsita" element={<CartScreen />} />
-              <Route path="/restaurants" element={<RestaurantsSection />} />
-              <Route path="/productos" element={<ProductsScreen />} />
-              <Route path="/pedidos" element={<PedidosScreen />} />
-              <Route path="/pedido/:id" element={<PedidoDetailsScreen />} />
-              <Route path="/chat/:orderId" element={<ChatScreen />} />
-              <Route path="*" element={<Navigate to="/home" />} />
-            </Routes>
-          </div>
-        </div>
-      ) : (
-        <Routes>
-          <Route path="/" element={<LoginScreen />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      )}
+      <AppContent token={token} />
     </BrowserRouter>
   );
 };
