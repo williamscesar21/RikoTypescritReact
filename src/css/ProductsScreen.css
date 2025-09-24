@@ -80,8 +80,7 @@
   flex-shrink: 0;
 }
 
-.tag-button.active,
-.tag-button:hover {
+.tag-button.active {
   background: #ff7f00;
   color: white;
 }
