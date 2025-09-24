@@ -118,17 +118,6 @@ useEffect(() => {
     }
 
     setMessages(fetchedMessages);
-
-    // 📌 Detectar si el usuario está al final antes de autoscrollear
-    const container = document.querySelector(".messages-container") as HTMLElement;
-    if (container) {
-      const isNearBottom =
-        container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-      if (isNearBottom) {
-        // solo scrollear si está abajo
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
   });
 
   return () => unsubscribe();
