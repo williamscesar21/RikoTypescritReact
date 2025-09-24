@@ -17,6 +17,7 @@ import ChatScreen from './components/ChatScreen';
 import ForgotPassword from './components/ForgotPassword';
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Device } from "@capacitor/device";
+import ProductsScreen from './components/ProductsScreen';
 
 const App: React.FC = () => {
   const token = localStorage.getItem('token');
@@ -182,6 +183,7 @@ useEffect(() => {
               <Route path="/product/:id" element={<ProductScreen />} />
               <Route path="/bolsita" element={<CartScreen />} />
               <Route path="/restaurants" element={<RestaurantsSection />} />
+              <Route path="/productos" element={<ProductsScreen />} />
               <Route path="/pedidos" element={<PedidosScreen />} />
               <Route path="/pedido/:id" element={<PedidoDetailsScreen />} />
               <Route path="/chat/:orderId" element={<ChatScreen />} /> {/* New route */}
