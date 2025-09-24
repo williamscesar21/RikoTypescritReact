@@ -34,6 +34,31 @@ const ChatScreen: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  // ✅ Función para formatear el tiempo en "Justo ahora", "hace 1m", etc.
+  const formatTime = (timestamp: any) => {
+    if (!timestamp) return '';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHrs = Math.floor(diffMin / 60);
+
+    if (diffSec < 60) return 'Justo ahora';
+    if (diffMin < 60) return `Hace ${diffMin} min`;
+    if (diffHrs < 24) return `Hace ${diffHrs} h`;
+
+    // Mostrar formato DD-MM-YYYY hh:mm a
+    return date.toLocaleString('es-VE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   // Verificar usuario autenticado
   useEffect(() => {
     console.log('Current Firebase user:', auth.currentUser);
@@ -101,45 +126,53 @@ const ChatScreen: React.FC = () => {
 
   return (
     <div className="chat-screen-container">
-        <button onClick={() => navigate(-1)} className="back-button">
-                <ArrowLeft size={20} />
-              </button>
+      <button onClick={() => navigate(-1)} className="back-button">
+        <ArrowLeft size={20} />
+      </button>
+
       {/* HEADER */}
       <div className="chat-header">
         <h2>Pedido</h2>
-        <h6> #{orderId}</h6>
+        <h6 style={{ color: '#888' }}> #{orderId}</h6>
       </div>
 
-{/* MENSAJES */}
-<div className="messages-container">
-  {messages.length === 0 && <p className="no-messages">No hay mensajes aún.</p>}
-  {messages.map((msg) => (
-    <div
-      key={msg.id}
-      className={`message ${msg.senderType === 'client' ? 'sent' : 'received'}`}
-    >
-      {msg.type === 'text' && <p>{msg.content}</p>}
+      {/* MENSAJES */}
+      <div className="messages-container">
+        {messages.length === 0 && <p className="no-messages">No hay mensajes aún.</p>}
+        {messages.map((msg) => (
+          <div key={msg.id} className="message-wrapper">
+            <div
+              className={`message ${msg.senderType === 'client' ? 'sent' : 'received'}`}
+            >
+              {msg.type === 'text' && <p>{msg.content}</p>}
+              {msg.type === 'image' && <img src={msg.imageUrl} alt="Comprobante" />}
+              {msg.type === 'location' && (
+                <div className="location-message">
+                  <p>📍 Mi ubicación</p>
+                  <a
+                    href={msg.content}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="maps-button"
+                  >
+                    Abrir en Google Maps
+                  </a>
+                </div>
+              )}
+            </div>
+            {/* Hora FUERA de la burbuja */}
+            <span
+              className={`message-time ${
+                msg.senderType === 'client' ? 'time-sent' : 'time-received'
+              }`}
+            >
+              {formatTime(msg.timestamp)}
+            </span>
+          </div>
+        ))}
 
-      {msg.type === 'image' && <img src={msg.imageUrl} alt="Comprobante" />}
-
-      {msg.type === 'location' && (
-        <div className="location-message">
-          <p>📍 Mi ubicación</p>
-          <a
-            href={msg.content}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="maps-button"
-          >
-            Abrir en Google Maps
-          </a>
-        </div>
-      )}
-    </div>
-  ))}
-  <div ref={messagesEndRef} />
-</div>
-
+        <div ref={messagesEndRef} />
+      </div>
 
       {/* INPUT */}
       <div className="input-container">
@@ -152,7 +185,9 @@ const ChatScreen: React.FC = () => {
         <button className="upload-btn" onClick={() => setShowModal(true)}>
           <CiImageOn />
         </button>
-        <button className="send-btn" onClick={sendMessage}>Enviar</button>
+        <button className="send-btn" onClick={sendMessage}>
+          Enviar
+        </button>
       </div>
 
       {/* MODAL */}
@@ -160,23 +195,17 @@ const ChatScreen: React.FC = () => {
         <div className="modal-overlay">
           <div className="modal">
             <h3>Subir comprobante</h3>
-            {/* Input oculto */}
             <input
-            type="file"
-            id="file-upload"
-            accept="image/*"
-            className='file-input'
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+              type="file"
+              id="file-upload"
+              accept="image/*"
+              className="file-input"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
-
-            {/* Label personalizado como botón */}
             <label htmlFor="file-upload" className="custom-upload-btn">
-            📎 Subir archivo
+              📎 Subir archivo
             </label>
-
-            {/* Nombre del archivo si existe */}
             {file && <span className="file-name">{file.name}</span>}
-
             {file && (
               <div className="preview">
                 <img src={URL.createObjectURL(file)} alt="preview" />
@@ -186,11 +215,7 @@ const ChatScreen: React.FC = () => {
               <button className="cancel-btn" onClick={() => setShowModal(false)}>
                 Cancelar
               </button>
-              <button
-                className="send-proof-btn"
-                onClick={handleFileUpload}
-                disabled={!file}
-              >
+              <button className="send-proof-btn" onClick={handleFileUpload} disabled={!file}>
                 Enviar Comprobante
               </button>
             </div>

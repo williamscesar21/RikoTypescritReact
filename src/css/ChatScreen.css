@@ -237,3 +237,36 @@
 h6{
   color: '#FF7F00'
 }
+
+.message-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+  max-width: 100%;
+}
+
+.message-wrapper.sent {
+  margin-left: auto;
+  align-items: flex-end;
+}
+
+.message-wrapper.received {
+  margin-right: auto;
+  align-items: flex-start;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+.time-sent {
+  text-align: right;
+  align-self: flex-end;
+}
+
+.time-received {
+  text-align: left;
+  align-self: flex-start;
+}
