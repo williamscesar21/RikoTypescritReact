@@ -94,34 +94,46 @@ const ChatScreen: React.FC = () => {
   }, []);
 
   // 🔄 Escuchar mensajes en tiempo real
-  useEffect(() => {
-    if (!orderId) return;
+// 🔄 Escuchar mensajes en tiempo real
+useEffect(() => {
+  if (!orderId) return;
 
-    const q = query(
-      collection(db, 'RikoChat', orderId, 'messages'),
-      orderBy('timestamp', 'asc')
-    );
+  const q = query(
+    collection(db, 'RikoChat', orderId, 'messages'),
+    orderBy('timestamp', 'asc')
+  );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedMessages = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Message[];
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedMessages = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Message[];
 
-      // Detectar si llegó un nuevo mensaje
-      if (messages.length && fetchedMessages.length > messages.length) {
-        const newMsg = fetchedMessages[fetchedMessages.length - 1];
-        if (newMsg.senderId !== auth.currentUser?.uid) {
-          triggerNotification(newMsg);
-        }
+    // Detectar si llegó un nuevo mensaje
+    if (messages.length && fetchedMessages.length > messages.length) {
+      const newMsg = fetchedMessages[fetchedMessages.length - 1];
+      if (newMsg.senderId !== auth.currentUser?.uid) {
+        triggerNotification(newMsg);
       }
+    }
 
-      setMessages(fetchedMessages);
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    });
+    setMessages(fetchedMessages);
 
-    return () => unsubscribe();
-  }, [orderId, messages]);
+    // 📌 Detectar si el usuario está al final antes de autoscrollear
+    const container = document.querySelector(".messages-container") as HTMLElement;
+    if (container) {
+      const isNearBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      if (isNearBottom) {
+        // solo scrollear si está abajo
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  });
+
+  return () => unsubscribe();
+}, [orderId, messages]);
+
 
   // ➡️ Enviar mensaje de texto
   const sendMessage = async () => {
