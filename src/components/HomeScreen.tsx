@@ -89,7 +89,7 @@ const HomeScreen: React.FC = () => {
         <div
           onClick={() => navigate(`/client/${clientID}`)}
           className="headerIcons"
-          style={{ backgroundColor: '#FF7F00', padding: '0rem 0.8rem', borderRadius: '20px' }}
+          style={{ backgroundColor: '#3c00ffff', padding: '0rem 0.8rem', borderRadius: '20px' }}
         >
           Mi cuenta
         </div>
