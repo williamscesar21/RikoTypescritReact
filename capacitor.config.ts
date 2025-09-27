@@ -26,6 +26,10 @@ const config: CapacitorConfig = {
       android: {
         tapHighlightColor: 'transparent'
       }
+    },
+    CapacitorUpdater: {
+      autoUpdate: false,         // Usaremos descarga manual desde Drive
+      defaultChannel: 'production'
     }
   }
 };
