@@ -28,8 +28,9 @@ const config: CapacitorConfig = {
       }
     },
     CapacitorUpdater: {
-      autoUpdate: false,         // Usaremos descarga manual desde Drive
-      defaultChannel: 'production'
+      autoUpdate: false,
+      defaultChannel: 'production',
+      publicKey: '-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEA7Vv4k4Ecc6hgRDSBeqMUUU4O97yKoctDS7j3+bpH0yV2OwULDZuR\nFQ3J2XShUBwzPOdD5HAUpqoeUfVxgsptLynES8nlvRRXZcsjFcW3vSIK8HbuvTfR\nvlbN5eZyfMk5PpWphbvUgArgvoil1sfgyFBXYl/blZ6igYuSh1Jxb26B06f0qHbg\nqoSJKDHqf7OUXo+Ir+uz8RAC6bLN110N0HCAlr6BgT3zrbqqBlFUZN2SNpuKKSPB\nIvey6S+lHsQtaoahTvhOY8xDKBfy/56wLFnuszGq+RNuFtD2Fq1+rujJSmy9PGC3\nL8OJtwpzQzjKEB/n0gTvhnVwIWKxoLvLiwIDAQAB\n-----END RSA PUBLIC KEY-----\n'
     }
   }
 };

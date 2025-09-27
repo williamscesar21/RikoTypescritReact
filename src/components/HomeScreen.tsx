@@ -149,7 +149,7 @@ const HomeScreen: React.FC = () => {
       {!searchTerm && (
         <div style={{ animationDelay: '0.5s' }}>
           <div className='animate-slide-in' style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 className="section-title-main">Productos populares</h2>
+            <h2 className="section-title-main">Productos destacados</h2>
             <button
               onClick={() => navigate('/productos')}
               className="ver-mas-button"
